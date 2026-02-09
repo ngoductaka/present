@@ -170,7 +170,7 @@ export const sendTestNotification = async (): Promise<void> => {
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-        seconds: 60,
+        seconds: 5,
       },
     });
     console.log('Test notification sent');
