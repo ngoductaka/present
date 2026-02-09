@@ -3,13 +3,15 @@ import { Platform } from 'react-native';
 import { NotificationSettings } from '../types';
 
 // Configure notification behavior
+// This handler controls how notifications appear when the app is in the FOREGROUND
+// When app is in background or killed, notifications are automatically shown by the OS
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
+    shouldShowAlert: true,      // Show alert when app is in foreground
+    shouldPlaySound: true,       // Play sound in all states
+    shouldSetBadge: false,       // Don't update badge count
+    shouldShowBanner: true,      // Show banner notification
+    shouldShowList: true,        // Add to notification list
   }),
 });
 
@@ -35,10 +37,11 @@ export const requestPermissions = async (): Promise<boolean> => {
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync('default', {
         name: 'Default',
-        importance: Notifications.AndroidImportance.MAX,
+        importance: Notifications.AndroidImportance.HIGH,
         vibrationPattern: [0, 250, 250, 250],
         lightColor: '#FF231F7C',
         sound: 'default',
+        lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
       });
     }
 
@@ -67,7 +70,7 @@ const calculateNotificationTimes = (settings: NotificationSettings): Date[] => {
 
   const times: Date[] = [];
   const now = new Date();
-  
+
   // Start from the start time
   let currentMinutes = start.hours * 60 + start.minutes;
   const endMinutes = end.hours * 60 + end.minutes;
@@ -110,7 +113,7 @@ export const scheduleNotifications = async (
 
       await Notifications.scheduleNotificationAsync({
         content: {
-          title: '⏰ Reminder',
+          title: 'Reminder',
           body: 'Time for your scheduled notification!',
           sound: 'default',
           priority: Notifications.AndroidNotificationPriority.HIGH,
