@@ -8,11 +8,14 @@ import { AnalyticsScreen } from './src/screens/AnalyticsScreen';
 import { NotificationsScreen } from './src/screens/NotificationsScreen';
 import { View } from 'react-native';
 
+import { Ionicons } from '@expo/vector-icons';
+
 const Tab = createBottomTabNavigator();
+
 export default function App() {
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={{ flex: 1, position: 'relative', backgroundColor: 'red' }}>
+      <SafeAreaView style={{ flex: 1, position: 'relative' }}>
         <NavigationContainer>
           <Tab.Navigator
             screenOptions={{
@@ -57,60 +60,53 @@ export default function App() {
               name="Log Mood"
               component={LogMoodScreen}
               options={{
-                tabBarIcon: ({ color, size }) => (
-                  <TabIcon emoji="✨" color={color} size={size} />
+                tabBarIcon: ({ color, size, focused }) => (
+                  <Ionicons name={focused ? "happy" : "happy-outline"} size={size} color={color} />
                 ),
-                headerTitle: '✨ Log Your Mood',
+                headerTitle: 'Log Your Mood',
+                headerShown: false,
               }}
             />
             <Tab.Screen
               name="History"
               component={HistoryScreen}
               options={{
-                tabBarIcon: ({ color, size }) => (
-                  <TabIcon emoji="📖" color={color} size={size} />
+                tabBarIcon: ({ color, size, focused }) => (
+                  <Ionicons name={focused ? "journal" : "journal-outline"} size={size} color={color} />
                 ),
-                headerTitle: '📖 Mood History',
+                headerTitle: 'Mood History',
+                headerShown: false,
               }}
             />
             <Tab.Screen
               name="Analytics"
               component={AnalyticsScreen}
               options={{
-                tabBarIcon: ({ color, size }) => (
-                  <TabIcon emoji="📊" color={color} size={size} />
+                tabBarIcon: ({ color, size, focused }) => (
+                  <Ionicons name={focused ? "stats-chart" : "stats-chart-outline"} size={size} color={color} />
                 ),
-                headerTitle: '📊 Analytics',
+                headerTitle: 'Analytics',
+                headerShown: false,
               }}
             />
             <Tab.Screen
               name="Reminders"
               component={NotificationsScreen}
               options={{
-                tabBarIcon: ({ color, size }) => (
-                  <TabIcon emoji="⏰" color={color} size={size} />
+                tabBarIcon: ({ color, size, focused }) => (
+                  <Ionicons name={focused ? "notifications" : "notifications-outline"} size={size} color={color} />
                 ),
-                headerTitle: '⏰ Reminders',
+                headerTitle: 'Reminders',
+                headerShown: false,
               }}
             />
           </Tab.Navigator>
         </NavigationContainer>
-        <View style={{ backgroundColor: 'red', position: 'absolute', bottom: -20, width: 500, height: 20 }}>
-          <TabIcon emoji="✨" color="#007AFF" size={24} />
+        <View style={{ position: 'absolute', bottom: -20, width: 500, height: 20 }}>
         </View>
       </SafeAreaView>
     </SafeAreaProvider>
   );
 }
-
-// Custom tab icon component using emojis
-const TabIcon = ({ emoji, color, size }: { emoji: string; color: string; size: number }) => {
-  const { Text } = require('react-native');
-  return (
-    <Text style={{ fontSize: size + 4, opacity: color === '#007AFF' ? 1 : 0.5 }}>
-      {emoji}
-    </Text>
-  );
-};
 
 

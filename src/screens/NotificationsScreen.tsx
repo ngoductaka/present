@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { Ionicons } from '@expo/vector-icons';
 import { TimePicker } from '../components/TimePicker';
 import { IntervalSelector } from '../components/IntervalSelector';
 import { NotificationSettings } from '../types';
@@ -19,6 +20,7 @@ import {
     scheduleNotifications,
     cancelAllNotifications,
     getScheduledNotificationsCount,
+    sendTestNotification
 } from '../services/notificationService';
 
 export const NotificationsScreen = () => {
@@ -140,6 +142,24 @@ export const NotificationsScreen = () => {
         }
     };
 
+    const handleTest = async () => {
+        try {
+            const hasPermission = await requestPermissions();
+            if (!hasPermission) {
+                Alert.alert(
+                    'Permission Required',
+                    'Please enable notifications in your device settings.'
+                );
+                return;
+            }
+            await sendTestNotification();
+            Alert.alert('Sent', 'Test notification sent! It should appear in 1 second.');
+        } catch (error) {
+            console.error('Error sending test notification:', error);
+            Alert.alert('Error', 'Failed to send test notification.');
+        }
+    };
+
     if (loading && scheduledCount === 0) {
         return (
             <View style={styles.loadingContainer}>
@@ -153,7 +173,10 @@ export const NotificationsScreen = () => {
             <StatusBar style="dark" />
             <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
                 <View style={styles.header}>
-                    <Text style={styles.title}>⏰ Notification Scheduler</Text>
+                    <View style={styles.titleContainer}>
+                        <Ionicons name="notifications-circle" size={40} color="#007AFF" style={styles.headerIcon} />
+                        <Text style={styles.title}>Reminders</Text>
+                    </View>
                     <Text style={styles.subtitle}>
                         Schedule recurring notifications within your preferred time range
                     </Text>
@@ -180,7 +203,7 @@ export const NotificationsScreen = () => {
                     {settings.isActive && (
                         <View style={styles.statusContainer}>
                             <View style={styles.statusBadge}>
-                                <View style={styles.statusDot} />
+                                <Ionicons name="checkmark-circle" size={20} color="#2e7d32" style={styles.statusIcon} />
                                 <Text style={styles.statusText}>
                                     Active • {scheduledCount} notifications scheduled
                                 </Text>
@@ -198,7 +221,10 @@ export const NotificationsScreen = () => {
                                 {loading ? (
                                     <ActivityIndicator color="#fff" />
                                 ) : (
-                                    <Text style={styles.buttonText}>Start Notifications</Text>
+                                    <View style={styles.buttonInner}>
+                                        <Ionicons name="play" size={20} color="#fff" style={styles.buttonIcon} />
+                                        <Text style={styles.buttonText}>Start Notifications</Text>
+                                    </View>
                                 )}
                             </TouchableOpacity>
                         ) : (
@@ -210,24 +236,50 @@ export const NotificationsScreen = () => {
                                 {loading ? (
                                     <ActivityIndicator color="#fff" />
                                 ) : (
-                                    <Text style={styles.buttonText}>Stop Notifications</Text>
+                                    <View style={styles.buttonInner}>
+                                        <Ionicons name="stop" size={20} color="#fff" style={styles.buttonIcon} />
+                                        <Text style={styles.buttonText}>Stop Notifications</Text>
+                                    </View>
                                 )}
                             </TouchableOpacity>
                         )}
+
+                        <TouchableOpacity
+                            style={[styles.button, styles.testButton]}
+                            onPress={handleTest}
+                            disabled={loading}
+                        >
+                            <View style={styles.buttonInner}>
+                                <Ionicons name="flash" size={20} color="#fff" style={styles.buttonIcon} />
+                                <Text style={styles.buttonText}>Send Test Notification</Text>
+                            </View>
+                        </TouchableOpacity>
                     </View>
                 </View>
 
                 <View style={styles.infoCard}>
-                    <Text style={styles.infoTitle}>ℹ️ How it works</Text>
-                    <Text style={styles.infoText}>
-                        • Notifications will be sent at regular intervals within your time range
-                    </Text>
-                    <Text style={styles.infoText}>
-                        • Notifications include sound and will appear even when the app is closed
-                    </Text>
-                    <Text style={styles.infoText}>
-                        • Your settings are saved automatically
-                    </Text>
+                    <View style={styles.infoTitleContainer}>
+                        <Ionicons name="information-circle" size={24} color="#007AFF" style={styles.infoIcon} />
+                        <Text style={styles.infoTitle}>How it works</Text>
+                    </View>
+                    <View style={styles.infoItem}>
+                        <Ionicons name="time-outline" size={18} color="#666" style={styles.infoItemIcon} />
+                        <Text style={styles.infoText}>
+                            Notifications will be sent at regular intervals within your time range
+                        </Text>
+                    </View>
+                    <View style={styles.infoItem}>
+                        <Ionicons name="volume-medium-outline" size={18} color="#666" style={styles.infoItemIcon} />
+                        <Text style={styles.infoText}>
+                            Notifications include sound and will appear even when the app is closed
+                        </Text>
+                    </View>
+                    <View style={styles.infoItem}>
+                        <Ionicons name="save-outline" size={18} color="#666" style={styles.infoItemIcon} />
+                        <Text style={styles.infoText}>
+                            Your settings are saved automatically
+                        </Text>
+                    </View>
                 </View>
             </ScrollView>
         </SafeAreaView>
@@ -249,16 +301,23 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     contentContainer: {
-        padding: 20,
+        padding: 10,
     },
     header: {
         marginBottom: 24,
+    },
+    titleContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    headerIcon: {
+        marginRight: 10,
     },
     title: {
         fontSize: 32,
         fontWeight: 'bold',
         color: '#1a1a1a',
-        marginBottom: 8,
     },
     subtitle: {
         fontSize: 16,
@@ -287,11 +346,7 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         borderRadius: 12,
     },
-    statusDot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        backgroundColor: '#4caf50',
+    statusIcon: {
         marginRight: 8,
     },
     statusText: {
@@ -309,11 +364,23 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         minHeight: 56,
     },
+    buttonInner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    buttonIcon: {
+        marginRight: 8,
+    },
     startButton: {
         backgroundColor: '#007AFF',
     },
     stopButton: {
         backgroundColor: '#ff3b30',
+    },
+    testButton: {
+        backgroundColor: '#5856D6',
+        marginTop: 12,
     },
     buttonText: {
         color: '#fff',
@@ -329,17 +396,34 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 8,
         elevation: 3,
+        marginBottom: 20,
+    },
+    infoTitleContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    infoIcon: {
+        marginRight: 8,
     },
     infoTitle: {
         fontSize: 18,
         fontWeight: '700',
         color: '#1a1a1a',
+    },
+    infoItem: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
         marginBottom: 12,
     },
+    infoItemIcon: {
+        marginRight: 10,
+        marginTop: 2,
+    },
     infoText: {
+        flex: 1,
         fontSize: 14,
         color: '#666',
         lineHeight: 22,
-        marginBottom: 8,
     },
 });

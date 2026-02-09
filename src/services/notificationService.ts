@@ -116,10 +116,9 @@ export const scheduleNotifications = async (
           priority: Notifications.AndroidNotificationPriority.HIGH,
         },
         trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DAILY,
           hour,
           minute,
-          repeats: true,
-          type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
         },
       });
     }
@@ -154,5 +153,29 @@ export const getScheduledNotificationsCount = async (): Promise<number> => {
   } catch (error) {
     console.error('Error getting scheduled notifications:', error);
     return 0;
+  }
+};
+
+/**
+ * Send a test notification immediately
+ */
+export const sendTestNotification = async (): Promise<void> => {
+  try {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: '🔔 Test Notification',
+        body: 'This is a test notification. If you see this, notifications are working!',
+        sound: 'default',
+        priority: Notifications.AndroidNotificationPriority.HIGH,
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: 60,
+      },
+    });
+    console.log('Test notification sent');
+  } catch (error) {
+    console.error('Error sending test notification:', error);
+    throw error;
   }
 };

@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { MoodEntry, MOOD_OPTIONS, ACTIVITY_OPTIONS } from '../types';
 import { getAllMoodEntries, deleteMoodEntry } from '../services/moodService';
+import { Ionicons } from '@expo/vector-icons';
 
 interface MoodHistoryProps {
     refreshTrigger?: number;
@@ -87,7 +88,7 @@ export const MoodHistory: React.FC<MoodHistoryProps> = ({ refreshTrigger }) => {
     if (entries.length === 0) {
         return (
             <View style={styles.emptyContainer}>
-                <Text style={styles.emptyEmoji}>📝</Text>
+                <Ionicons name="document-text-outline" size={80} color="#ccc" style={styles.emptyIcon} />
                 <Text style={styles.emptyTitle}>No mood entries yet</Text>
                 <Text style={styles.emptyText}>
                     Start tracking your mood to see your history here
@@ -123,7 +124,7 @@ export const MoodHistory: React.FC<MoodHistoryProps> = ({ refreshTrigger }) => {
                                         onPress={() => handleDelete(entry)}
                                         style={styles.deleteButton}
                                     >
-                                        <Text style={styles.deleteText}>🗑️</Text>
+                                        <Ionicons name="trash-outline" size={20} color="#ff3b30" />
                                     </TouchableOpacity>
                                 </View>
 
@@ -165,8 +166,7 @@ const styles = StyleSheet.create({
         padding: 40,
         backgroundColor: '#f5f5f5',
     },
-    emptyEmoji: {
-        fontSize: 64,
+    emptyIcon: {
         marginBottom: 16,
     },
     emptyTitle: {
@@ -230,9 +230,6 @@ const styles = StyleSheet.create({
     },
     deleteButton: {
         padding: 4,
-    },
-    deleteText: {
-        fontSize: 20,
     },
     activitiesContainer: {
         flexDirection: 'row',

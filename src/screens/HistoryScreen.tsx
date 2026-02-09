@@ -24,6 +24,6 @@ const styles = StyleSheet.create({
     },
     content: {
         flex: 1,
-        paddingTop: 20,
+        padding: 10,
     },
 });

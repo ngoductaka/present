@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { MoodStats, MOOD_OPTIONS } from '../types';
 import { calculateMoodStats } from '../services/moodService';
+import { Ionicons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 
@@ -129,7 +130,7 @@ export const MoodAnalytics: React.FC<MoodAnalyticsProps> = ({
 
             {stats.totalEntries === 0 ? (
                 <View style={styles.emptyContainer}>
-                    <Text style={styles.emptyEmoji}>📊</Text>
+                    <Ionicons name="bar-chart-outline" size={80} color="#ccc" style={styles.emptyIcon} />
                     <Text style={styles.emptyTitle}>No data yet</Text>
                     <Text style={styles.emptyText}>
                         Start logging your mood to see analytics
@@ -188,7 +189,10 @@ export const MoodAnalytics: React.FC<MoodAnalyticsProps> = ({
 
                     {/* Insights */}
                     <View style={styles.insightsCard}>
-                        <Text style={styles.cardTitle}>💡 Insights</Text>
+                        <View style={styles.insightTitleContainer}>
+                            <Ionicons name="bulb-outline" size={24} color="#FBC02D" style={styles.insightIcon} />
+                            <Text style={styles.cardTitle}>Insights</Text>
+                        </View>
                         {stats.averageMoodScore >= 4 && (
                             <Text style={styles.insightText}>
                                 ✨ You're doing great! Your mood has been consistently positive.
@@ -262,8 +266,7 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         marginTop: 20,
     },
-    emptyEmoji: {
-        fontSize: 64,
+    emptyIcon: {
         marginBottom: 16,
     },
     emptyTitle: {
@@ -403,6 +406,14 @@ const styles = StyleSheet.create({
         marginBottom: 16,
         borderWidth: 2,
         borderColor: '#FFE082',
+    },
+    insightTitleContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    insightIcon: {
+        marginRight: 8,
     },
     insightText: {
         fontSize: 15,
