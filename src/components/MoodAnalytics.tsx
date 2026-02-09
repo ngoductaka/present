@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
     StyleSheet,
     Text,
@@ -25,11 +26,7 @@ export const MoodAnalytics: React.FC<MoodAnalyticsProps> = ({
     const [timeRange, setTimeRange] = useState<TimeRange>('week');
     const [stats, setStats] = useState<MoodStats | null>(null);
 
-    useEffect(() => {
-        loadStats();
-    }, [timeRange, refreshTrigger]);
-
-    const loadStats = async () => {
+    const loadStats = useCallback(async () => {
         const endDate = new Date();
         const startDate = new Date();
 
@@ -47,7 +44,17 @@ export const MoodAnalytics: React.FC<MoodAnalyticsProps> = ({
 
         const moodStats = await calculateMoodStats(startDate, endDate);
         setStats(moodStats);
-    };
+    }, [timeRange]);
+
+    useFocusEffect(
+        useCallback(() => {
+            loadStats();
+        }, [loadStats])
+    );
+
+    useEffect(() => {
+        loadStats();
+    }, [loadStats, refreshTrigger]);
 
     const renderMoodBar = (mood: string, count: number, total: number) => {
         const moodOption = MOOD_OPTIONS.find((m) => m.type === mood);

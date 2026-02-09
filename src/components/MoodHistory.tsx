@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
     StyleSheet,
     Text,
@@ -21,11 +22,7 @@ export const MoodHistory: React.FC<MoodHistoryProps> = ({ refreshTrigger }) => {
         Record<string, MoodEntry[]>
     >({});
 
-    useEffect(() => {
-        loadEntries();
-    }, [refreshTrigger]);
-
-    const loadEntries = async () => {
+    const loadEntries = useCallback(async () => {
         const allEntries = await getAllMoodEntries();
         setEntries(allEntries);
 
@@ -47,7 +44,17 @@ export const MoodHistory: React.FC<MoodHistoryProps> = ({ refreshTrigger }) => {
         });
 
         setGroupedEntries(grouped);
-    };
+    }, []);
+
+    useFocusEffect(
+        useCallback(() => {
+            loadEntries();
+        }, [loadEntries])
+    );
+
+    useEffect(() => {
+        loadEntries();
+    }, [refreshTrigger, loadEntries]);
 
     const handleDelete = (entry: MoodEntry) => {
         Alert.alert(
@@ -158,6 +165,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#f5f5f5',
+        // backgroundColor: 'red',
     },
     emptyContainer: {
         flex: 1,
@@ -195,7 +203,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderRadius: 12,
         padding: 16,
-        marginHorizontal: 20,
+        // marginHorizontal: 20,
         marginBottom: 12,
         borderLeftWidth: 4,
         shadowColor: '#000',
