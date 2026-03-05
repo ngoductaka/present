@@ -5,18 +5,22 @@ import {
     View,
     TouchableOpacity,
     TextInput,
-    ScrollView,
     Alert,
     Animated,
+    KeyboardAvoidingView,
+    ScrollView,
+    Platform,
 } from 'react-native';
-import { MoodType, MOOD_OPTIONS, ACTIVITY_OPTIONS, MoodEntry } from '../types';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { MoodType, MOOD_OPTIONS, MoodEntry, ACTIVITY_OPTIONS } from '../types';
 import { saveMoodEntry } from '../services/moodService';
 
 interface QuickMoodLoggerProps {
     onSaved?: () => void;
+    onMoodChange?: (mood: typeof MOOD_OPTIONS[0] | null) => void;
 }
 
-export const QuickMoodLogger: React.FC<QuickMoodLoggerProps> = ({ onSaved }) => {
+export const QuickMoodLogger: React.FC<QuickMoodLoggerProps> = ({ onSaved, onMoodChange }) => {
     const [selectedMood, setSelectedMood] = useState<MoodType | null>(null);
     const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
     const [note, setNote] = useState('');
@@ -25,10 +29,9 @@ export const QuickMoodLogger: React.FC<QuickMoodLoggerProps> = ({ onSaved }) => 
 
     const handleMoodSelect = (mood: MoodType) => {
         setSelectedMood(mood);
-        // Animate selection
         Animated.sequence([
             Animated.timing(scaleAnim, {
-                toValue: 1.2,
+                toValue: 1.3,
                 duration: 100,
                 useNativeDriver: true,
             }),
@@ -41,11 +44,11 @@ export const QuickMoodLogger: React.FC<QuickMoodLoggerProps> = ({ onSaved }) => 
     };
 
     const toggleActivity = (activityId: string) => {
-        if (selectedActivities.includes(activityId)) {
-            setSelectedActivities(selectedActivities.filter((id) => id !== activityId));
-        } else {
-            setSelectedActivities([...selectedActivities, activityId]);
-        }
+        setSelectedActivities(prev =>
+            prev.includes(activityId)
+                ? prev.filter(id => id !== activityId)
+                : [...prev, activityId]
+        );
     };
 
     const handleSave = async () => {
@@ -56,7 +59,6 @@ export const QuickMoodLogger: React.FC<QuickMoodLoggerProps> = ({ onSaved }) => 
 
         try {
             setSaving(true);
-
             const entry: MoodEntry = {
                 id: Date.now().toString(),
                 mood: selectedMood,
@@ -66,61 +68,65 @@ export const QuickMoodLogger: React.FC<QuickMoodLoggerProps> = ({ onSaved }) => 
             };
 
             await saveMoodEntry(entry);
-
-            // Reset form
             setSelectedMood(null);
             setSelectedActivities([]);
             setNote('');
-
-            Alert.alert('Saved!', 'Your mood has been logged 🎉');
+            onMoodChange?.(null);
+            Alert.alert('Saved!', 'Your moment has been captured ✨');
             onSaved?.();
         } catch (error) {
-            Alert.alert('Error', 'Failed to save mood entry');
+            Alert.alert('Error', 'Failed to save entry');
         } finally {
             setSaving(false);
         }
     };
 
-    const selectedMoodOption = MOOD_OPTIONS.find((m) => m.type === selectedMood);
-
     return (
-        <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>How are you feeling?</Text>
-                <View style={styles.moodGrid}>
-                    {MOOD_OPTIONS.map((mood) => {
-                        const isSelected = selectedMood === mood.type;
-                        return (
-                            <TouchableOpacity
-                                key={mood.type}
-                                style={[
-                                    styles.moodButton,
-                                    isSelected && {
-                                        backgroundColor: mood.color,
-                                        transform: [{ scale: 1.05 }],
-                                    },
-                                ]}
-                                onPress={() => handleMoodSelect(mood.type)}
-                                activeOpacity={0.7}
-                            >
-                                <Text style={styles.moodEmoji}>{mood.emoji}</Text>
-                                <Text
+        <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.container}
+        >
+            <ScrollView
+                contentContainerStyle={styles.scrollContent}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+            >
+                <View style={styles.card}>
+                    <Text style={styles.sectionTitle}>How are you feeling?</Text>
+                    <View style={styles.moodGrid}>
+                        {MOOD_OPTIONS.map((mood) => {
+                            const isSelected = selectedMood === mood.type;
+                            return (
+                                <TouchableOpacity
+                                    key={mood.type}
                                     style={[
-                                        styles.moodLabel,
-                                        isSelected && styles.moodLabelSelected,
+                                        styles.moodButton,
+                                        isSelected && styles.moodButtonSelected,
+                                        { backgroundColor: mood.bgColor, borderColor: isSelected ? mood.color : '#fff' },
                                     ]}
+                                    onPress={() => {
+                                        handleMoodSelect(mood.type);
+                                        onMoodChange?.(mood);
+                                    }}
+                                    activeOpacity={0.7}
                                 >
-                                    {mood.label}
-                                </Text>
-                            </TouchableOpacity>
-                        );
-                    })}
-                </View>
-            </View>
+                                    <Animated.View style={{
+                                        transform: [{ scale: isSelected ? scaleAnim : 1 }],
+                                    }}>
+                                        {mood.iconFamily === 'Ionicons' ? (
+                                            <Ionicons name={mood.icon as any} size={28} color={mood.color} />
+                                        ) : (
+                                            <MaterialCommunityIcons
+                                                name={mood.icon as any} size={28}
+                                                color={mood.color} />
+                                        )}
+                                    </Animated.View>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </View>
 
-            {selectedMood && (
-                <Animated.View style={[styles.section, { opacity: scaleAnim }]}>
-                    <Text style={styles.sectionTitle}>What are you doing?</Text>
+                    <Text style={[styles.sectionTitle, { marginTop: 24, marginBottom: 12 }]}>What are you doing?</Text>
                     <View style={styles.activityGrid}>
                         {ACTIVITY_OPTIONS.map((activity) => {
                             const isSelected = selectedActivities.includes(activity.id);
@@ -135,170 +141,160 @@ export const QuickMoodLogger: React.FC<QuickMoodLoggerProps> = ({ onSaved }) => 
                                     activeOpacity={0.7}
                                 >
                                     <Text style={styles.activityEmoji}>{activity.emoji}</Text>
-                                    <Text
-                                        style={[
-                                            styles.activityLabel,
-                                            isSelected && styles.activityLabelSelected,
-                                        ]}
-                                    >
-                                        {activity.label}
-                                    </Text>
+                                    <Text style={styles.activityLabel}>{activity.label}</Text>
                                 </TouchableOpacity>
                             );
                         })}
                     </View>
+                </View>
 
-                    <View style={styles.noteSection}>
-                        <Text style={styles.noteLabel}>Add a note (optional)</Text>
-                        <TextInput
-                            style={styles.noteInput}
-                            placeholder="What's on your mind?"
-                            placeholderTextColor="#999"
-                            value={note}
-                            onChangeText={setNote}
-                            multiline
-                            maxLength={200}
-                        />
-                        <Text style={styles.charCount}>{note.length}/200</Text>
-                    </View>
+                <View style={styles.inputSection}>
+                    <Text style={styles.inputLabel}>Add a note (optional)</Text>
+                    <TextInput
+                        style={styles.textInput}
+                        placeholder="Reflections, thoughts..."
+                        placeholderTextColor="#ccc"
+                        value={note}
+                        onChangeText={setNote}
+                        multiline={false}
+                    />
+                </View>
 
-                    <TouchableOpacity
-                        style={[
-                            styles.saveButton,
-                            { backgroundColor: selectedMoodOption?.color || '#007AFF' },
-                        ]}
-                        onPress={handleSave}
-                        disabled={saving}
-                        activeOpacity={0.8}
-                    >
-                        <Text style={styles.saveButtonText}>
-                            {saving ? 'Saving...' : '✓ Save Mood'}
-                        </Text>
-                    </TouchableOpacity>
-                </Animated.View>
-            )}
-        </ScrollView>
+                <TouchableOpacity
+                    style={styles.saveButton}
+                    onPress={handleSave}
+                    disabled={saving}
+                    activeOpacity={0.8}
+                >
+                    <Text style={styles.saveButtonText}>
+                        {saving ? 'Saving...' : 'Save'}
+                    </Text>
+                </TouchableOpacity>
+            </ScrollView>
+        </KeyboardAvoidingView>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
-        // backgroundColor: 'blue',
+        width: '100%',
     },
-    section: {
+    scrollContent: {
+        flexGrow: 1,
+        paddingBottom: 24,
+    },
+    card: {
         backgroundColor: '#fff',
-        borderRadius: 16,
-        padding: 20,
-        marginBottom: 16,
+        opacity: 0.9,
+        borderRadius: 20,
+        padding: 24,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 3,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.05,
+        shadowRadius: 12,
+        elevation: 5,
+        marginBottom: 25,
     },
     sectionTitle: {
-        fontSize: 20,
-        fontWeight: '700',
-        color: '#1a1a1a',
-        marginBottom: 16,
+        fontSize: 16,
+        fontWeight: '500',
+        color: '#666',
+        marginBottom: 20,
     },
     moodGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 12,
         justifyContent: 'space-between',
+        rowGap: 20,
     },
     moodButton: {
-        width: '18%',
-        aspectRatio: 1,
-        backgroundColor: '#f8f8f8',
-        borderRadius: 16,
+        width: '22%',
+        borderWidth: 2,
+        borderColor: '#fff',
+        // aspectRatio: 1,
+        paddingVertical: 20,
+        borderRadius: 100,
+        // display: 'flex',
+        // flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    moodButtonSelected: {
         borderWidth: 2,
-        borderColor: 'transparent',
+        borderColor: '#eeaeaeff',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
     },
-    moodEmoji: {
-        fontSize: 32,
-        marginBottom: 4,
+    inputSection: {
+        marginBottom: 25,
     },
-    moodLabel: {
-        fontSize: 10,
-        fontWeight: '600',
-        color: '#666',
-        textAlign: 'center',
-    },
-    moodLabelSelected: {
-        color: '#fff',
-        fontWeight: '700',
-    },
-    activityGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 10,
-    },
-    activityButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#f8f8f8',
-        paddingHorizontal: 14,
-        paddingVertical: 10,
-        borderRadius: 20,
-        borderWidth: 2,
-        borderColor: 'transparent',
-    },
-    activityButtonSelected: {
-        backgroundColor: '#007AFF',
-        borderColor: '#0056b3',
-    },
-    activityEmoji: {
-        fontSize: 18,
-        marginRight: 6,
-    },
-    activityLabel: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#333',
-    },
-    activityLabelSelected: {
-        color: '#fff',
-    },
-    noteSection: {
-        marginTop: 20,
-    },
-    noteLabel: {
+    inputLabel: {
         fontSize: 16,
-        fontWeight: '600',
-        color: '#333',
-        marginBottom: 8,
+        fontWeight: '500',
+        color: '#666',
+        marginBottom: 12,
+        marginLeft: 4,
     },
-    noteInput: {
-        backgroundColor: '#f8f8f8',
-        borderRadius: 12,
-        padding: 12,
-        fontSize: 15,
+    textInput: {
+        backgroundColor: '#fff',
+        borderRadius: 15,
+        padding: 16,
+        fontSize: 16,
         color: '#333',
-        minHeight: 80,
-        textAlignVertical: 'top',
-    },
-    charCount: {
-        fontSize: 12,
-        color: '#999',
-        textAlign: 'right',
-        marginTop: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.03,
+        shadowRadius: 8,
+        elevation: 2,
     },
     saveButton: {
-        marginTop: 20,
-        borderRadius: 12,
-        padding: 18,
-        alignItems: 'center',
+        backgroundColor: '#8ac4c2', // Teal color from design
+        borderRadius: 30,
+        height: 56,
         justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#8ac4c2',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 4,
     },
     saveButtonText: {
         color: '#fff',
         fontSize: 18,
-        fontWeight: '700',
+        fontWeight: '600',
+    },
+    activityGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    activityButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f8f9fa',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#eee',
+        marginBottom: 4,
+    },
+    activityButtonSelected: {
+        backgroundColor: '#e1f5f4',
+        borderColor: '#8ac4c2',
+    },
+    activityEmoji: {
+        fontSize: 16,
+        marginRight: 6,
+    },
+    activityLabel: {
+        fontSize: 13,
+        color: '#666',
+        fontWeight: '500',
     },
 });

@@ -41,7 +41,7 @@ export const getMoodEntriesInRange = async (
     const allEntries = await getAllMoodEntries();
     const startTime = startDate.getTime();
     const endTime = endDate.getTime();
-    
+
     return allEntries.filter(
       (entry) => entry.timestamp >= startTime && entry.timestamp <= endTime
     );
@@ -74,30 +74,25 @@ export const calculateMoodStats = async (
 ): Promise<MoodStats> => {
   try {
     const entries = await getMoodEntriesInRange(startDate, endDate);
-    
+
     if (entries.length === 0) {
       return {
         totalEntries: 0,
-        moodFrequency: {
-          amazing: 0,
-          good: 0,
-          okay: 0,
-          bad: 0,
-          terrible: 0,
-        },
+        moodFrequency: MOOD_OPTIONS.reduce((acc, mood) => {
+          acc[mood.type] = 0;
+          return acc;
+        }, {} as Record<MoodType, number>),
         topActivities: [],
         averageMoodScore: 0,
       };
     }
 
     // Calculate mood frequency
-    const moodFrequency: Record<MoodType, number> = {
-      amazing: 0,
-      good: 0,
-      okay: 0,
-      bad: 0,
-      terrible: 0,
-    };
+    const moodFrequency: Record<MoodType, number> = MOOD_OPTIONS.reduce((acc, mood) => {
+      acc[mood.type] = 0;
+      return acc;
+    }, {} as Record<MoodType, number>);
+
 
     let totalScore = 0;
     const activityCount: Record<string, number> = {};
@@ -134,13 +129,10 @@ export const calculateMoodStats = async (
     console.error('Error calculating mood stats:', error);
     return {
       totalEntries: 0,
-      moodFrequency: {
-        amazing: 0,
-        good: 0,
-        okay: 0,
-        bad: 0,
-        terrible: 0,
-      },
+      moodFrequency: MOOD_OPTIONS.reduce((acc, mood) => {
+        acc[mood.type] = 0;
+        return acc;
+      }, {} as Record<MoodType, number>),
       topActivities: [],
       averageMoodScore: 0,
     };

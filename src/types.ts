@@ -13,7 +13,7 @@ export const DEFAULT_SETTINGS: NotificationSettings = {
 };
 
 // Mood Tracking Types
-export type MoodType = 'amazing' | 'good' | 'okay' | 'bad' | 'terrible';
+export type MoodType = 'joy' | 'sadness' | 'anger' | 'fear' | 'anxiety' | 'ennui' | 'embarrassment' | 'envy';
 
 export interface MoodEntry {
   id: string;
@@ -32,20 +32,51 @@ export interface MoodStats {
 
 export const MOOD_OPTIONS: Array<{
   type: MoodType;
-  emoji: string;
+  icon: string;
+  iconFamily: 'Ionicons' | 'MaterialCommunityIcons';
   label: string;
   color: string;
+  bgColor: string;
   score: number;
 }> = [
-  { type: 'amazing', emoji: '😄', label: 'Amazing', color: '#4CAF50', score: 5 },
-  { type: 'good', emoji: '🙂', label: 'Good', color: '#8BC34A', score: 4 },
-  { type: 'okay', emoji: '😐', label: 'Okay', color: '#FFC107', score: 3 },
-  { type: 'bad', emoji: '😟', label: 'Bad', color: '#FF9800', score: 2 },
-  { type: 'terrible', emoji: '😢', label: 'Terrible', color: '#F44336', score: 1 },
-];
+    {
+      type: 'joy', icon: 'sunny', iconFamily: 'Ionicons',
+      label: 'Joy', color: '#f1c40f', bgColor: '#fef9e7', score: 5
+    },
+    {
+      type: 'sadness', icon: 'water', iconFamily: 'Ionicons',
+      label: 'Sadness', color: '#3498db', bgColor: '#ebf5fb', score: 2
+    },
+    {
+      type: 'anger', icon: 'flame', iconFamily: 'Ionicons',
+      label: 'Anger', color: '#e74c3c', bgColor: '#faeaea', score: 1
+    },
+    {
+      type: 'fear', icon: 'skull', iconFamily: 'Ionicons',
+      label: 'Fear', color: '#9b59b6', bgColor: '#f5eef8', score: 2
+    },
+    {
+      type: 'anxiety', icon: 'flash', iconFamily: 'Ionicons',
+      label: 'Anxiety', color: '#e67e22', bgColor: '#fdf2e9', score: 2
+    },
+    {
+      type: 'ennui', icon: 'bed', iconFamily: 'Ionicons',
+      label: 'Ennui', color: '#34495e', bgColor: '#ebedef', score: 3
+    },
+    {
+      type: 'embarrassment', icon: 'happy-outline', iconFamily: 'Ionicons',
+      label: 'Embarrassment', color: '#ff85a2', bgColor: '#fff0f3', score: 2
+    },
+    {
+      type: 'envy', icon: 'eye', iconFamily: 'Ionicons',
+      label: 'Envy', color: '#16a085', bgColor: '#e8f8f5', score: 2
+    },
+  ];
 
 export const ACTIVITY_OPTIONS = [
   { id: 'work', emoji: '💼', label: 'Work' },
+  { id: 'gaming', emoji: '🎮', label: 'Game' },
+  { id: 'sport', emoji: '⚽', label: 'Sport' },
   { id: 'exercise', emoji: '🏃', label: 'Exercise' },
   { id: 'social', emoji: '👥', label: 'Social' },
   { id: 'relax', emoji: '🧘', label: 'Relax' },
@@ -56,5 +87,5 @@ export const ACTIVITY_OPTIONS = [
   { id: 'family', emoji: '👨‍👩‍👧', label: 'Family' },
   { id: 'travel', emoji: '✈️', label: 'Travel' },
   { id: 'music', emoji: '🎵', label: 'Music' },
-  { id: 'gaming', emoji: '🎮', label: 'Gaming' },
 ];
+

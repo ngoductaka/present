@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { MoodEntry, MOOD_OPTIONS, ACTIVITY_OPTIONS } from '../types';
 import { getAllMoodEntries, deleteMoodEntry } from '../services/moodService';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface MoodHistoryProps {
     refreshTrigger?: number;
@@ -96,9 +96,9 @@ export const MoodHistory: React.FC<MoodHistoryProps> = ({ refreshTrigger }) => {
         return (
             <View style={styles.emptyContainer}>
                 <Ionicons name="document-text-outline" size={80} color="#ccc" style={styles.emptyIcon} />
-                <Text style={styles.emptyTitle}>No mood entries yet</Text>
+                <Text style={styles.emptyTitle}>No entries yet</Text>
                 <Text style={styles.emptyText}>
-                    Start tracking your mood to see your history here
+                    Log your first moment to see it here
                 </Text>
             </View>
         );
@@ -114,15 +114,18 @@ export const MoodHistory: React.FC<MoodHistoryProps> = ({ refreshTrigger }) => {
                         return (
                             <View
                                 key={entry.id}
-                                style={[
-                                    styles.entryCard,
-                                    { borderLeftColor: moodOption?.color || '#ccc' },
-                                ]}
+                                style={styles.entryCard}
                             >
                                 <View style={styles.entryHeader}>
-                                    <View style={styles.moodInfo}>
-                                        <Text style={styles.moodEmoji}>{moodOption?.emoji}</Text>
-                                        <View>
+                                    <View style={styles.moodContainer}>
+                                        <View style={[styles.iconWrapper, { backgroundColor: moodOption?.bgColor || '#f0f0f0' }]}>
+                                            {moodOption?.iconFamily === 'Ionicons' ? (
+                                                <Ionicons name={moodOption.icon as any} size={24} color={moodOption.color} />
+                                            ) : (
+                                                <MaterialCommunityIcons name={moodOption?.icon as any} size={24} color={moodOption?.color} />
+                                            )}
+                                        </View>
+                                        <View style={styles.entryTextContent}>
                                             <Text style={styles.moodLabel}>{moodOption?.label}</Text>
                                             <Text style={styles.timeText}>{formatTime(entry.timestamp)}</Text>
                                         </View>
@@ -131,21 +134,9 @@ export const MoodHistory: React.FC<MoodHistoryProps> = ({ refreshTrigger }) => {
                                         onPress={() => handleDelete(entry)}
                                         style={styles.deleteButton}
                                     >
-                                        <Ionicons name="trash-outline" size={20} color="#ff3b30" />
+                                        <Ionicons name="trash-outline" size={18} color="#ccc" />
                                     </TouchableOpacity>
                                 </View>
-
-                                {entry.activities.length > 0 && (
-                                    <View style={styles.activitiesContainer}>
-                                        {entry.activities.map((activityId, index) => (
-                                            <View key={index} style={styles.activityTag}>
-                                                <Text style={styles.activityText}>
-                                                    {getActivityLabel(activityId)}
-                                                </Text>
-                                            </View>
-                                        ))}
-                                    </View>
-                                )}
 
                                 {entry.note && (
                                     <View style={styles.noteContainer}>
@@ -164,108 +155,94 @@ export const MoodHistory: React.FC<MoodHistoryProps> = ({ refreshTrigger }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
-        // backgroundColor: 'red',
     },
     emptyContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         padding: 40,
-        backgroundColor: '#f5f5f5',
+        marginTop: 100,
     },
     emptyIcon: {
         marginBottom: 16,
     },
     emptyTitle: {
-        fontSize: 24,
-        fontWeight: '700',
-        color: '#1a1a1a',
+        fontSize: 22,
+        fontWeight: '600',
+        color: '#444',
         marginBottom: 8,
     },
     emptyText: {
         fontSize: 16,
-        color: '#666',
+        color: '#999',
         textAlign: 'center',
-        lineHeight: 22,
     },
     dateSection: {
-        marginBottom: 24,
+        marginBottom: 20,
     },
     dateHeader: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: '#1a1a1a',
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#999',
         marginBottom: 12,
-        paddingHorizontal: 20,
+        paddingHorizontal: 4,
+        textTransform: 'uppercase',
+        letterSpacing: 1,
     },
     entryCard: {
         backgroundColor: '#fff',
-        borderRadius: 12,
+        borderRadius: 15,
         padding: 16,
-        // marginHorizontal: 20,
         marginBottom: 12,
-        borderLeftWidth: 4,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
         elevation: 2,
     },
     entryHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
-        marginBottom: 8,
     },
-    moodInfo: {
+    moodContainer: {
         flexDirection: 'row',
         alignItems: 'center',
     },
-    moodEmoji: {
-        fontSize: 32,
+    iconWrapper: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        justifyContent: 'center',
+        alignItems: 'center',
         marginRight: 12,
     },
+    entryTextContent: {
+        justifyContent: 'center',
+    },
     moodLabel: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: '#1a1a1a',
+        fontSize: 17,
+        fontWeight: '600',
+        color: '#333',
     },
     timeText: {
-        fontSize: 14,
-        color: '#666',
+        fontSize: 13,
+        color: '#999',
         marginTop: 2,
     },
     deleteButton: {
-        padding: 4,
-    },
-    activitiesContainer: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 8,
-        marginTop: 8,
-    },
-    activityTag: {
-        backgroundColor: '#f0f0f0',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 12,
-    },
-    activityText: {
-        fontSize: 13,
-        color: '#333',
-        fontWeight: '500',
+        padding: 6,
     },
     noteContainer: {
         marginTop: 12,
         paddingTop: 12,
         borderTopWidth: 1,
-        borderTopColor: '#f0f0f0',
+        borderTopColor: '#f9f9f9',
     },
     noteText: {
-        fontSize: 14,
-        color: '#555',
-        lineHeight: 20,
-        fontStyle: 'italic',
+        fontSize: 15,
+        color: '#666',
+        lineHeight: 22,
     },
 });
+

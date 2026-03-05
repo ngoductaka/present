@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { MoodStats, MOOD_OPTIONS } from '../types';
 import { calculateMoodStats } from '../services/moodService';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 
@@ -59,20 +59,27 @@ export const MoodAnalytics: React.FC<MoodAnalyticsProps> = ({
     const renderMoodBar = (mood: string, count: number, total: number) => {
         const moodOption = MOOD_OPTIONS.find((m) => m.type === mood);
         const percentage = total > 0 ? (count / total) * 100 : 0;
-        const barWidth = (percentage / 100) * (width - 120);
+        const availableWidth = width - 180;
+        const barWidth = total > 0 ? (count / total) * availableWidth : 0;
 
         return (
             <View key={mood} style={styles.barContainer}>
                 <View style={styles.barLabel}>
-                    <Text style={styles.barEmoji}>{moodOption?.emoji}</Text>
-                    <Text style={styles.barText}>{moodOption?.label}</Text>
+                    <View style={[styles.barIconWrapper, { backgroundColor: moodOption?.bgColor || '#f0f0f0' }]}>
+                        {moodOption?.iconFamily === 'Ionicons' ? (
+                            <Ionicons name={moodOption.icon as any} size={16} color={moodOption.color} />
+                        ) : (
+                            <MaterialCommunityIcons name={moodOption?.icon as any} size={16} color={moodOption?.color} />
+                        )}
+                    </View>
+                    <Text style={styles.barText} numberOfLines={1}>{moodOption?.label}</Text>
                 </View>
                 <View style={styles.barWrapper}>
                     <View
                         style={[
                             styles.bar,
                             {
-                                width: Math.max(barWidth, 0),
+                                width: Math.max(barWidth, 4),
                                 backgroundColor: moodOption?.color || '#ccc',
                             },
                         ]}
@@ -84,11 +91,11 @@ export const MoodAnalytics: React.FC<MoodAnalyticsProps> = ({
     };
 
     const getMoodScoreLabel = (score: number) => {
-        if (score >= 4.5) return 'Excellent';
-        if (score >= 3.5) return 'Good';
-        if (score >= 2.5) return 'Fair';
-        if (score >= 1.5) return 'Poor';
-        return 'Very Poor';
+        if (score >= 4.5) return 'Radiant';
+        if (score >= 3.5) return 'Balanced';
+        if (score >= 2.5) return 'Steady';
+        if (score >= 1.5) return 'Unsettled';
+        return 'Low Energy';
     };
 
     const getTimeRangeLabel = () => {
@@ -105,14 +112,13 @@ export const MoodAnalytics: React.FC<MoodAnalyticsProps> = ({
     if (!stats) {
         return (
             <View style={styles.loadingContainer}>
-                <Text style={styles.loadingText}>Loading analytics...</Text>
+                <Text style={styles.loadingText}>Analyzing your journey...</Text>
             </View>
         );
     }
 
     return (
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-            {/* Time Range Selector */}
             <View style={styles.timeRangeContainer}>
                 {(['day', 'week', 'month'] as TimeRange[]).map((range) => (
                     <TouchableOpacity
@@ -137,21 +143,20 @@ export const MoodAnalytics: React.FC<MoodAnalyticsProps> = ({
 
             {stats.totalEntries === 0 ? (
                 <View style={styles.emptyContainer}>
-                    <Ionicons name="bar-chart-outline" size={80} color="#ccc" style={styles.emptyIcon} />
-                    <Text style={styles.emptyTitle}>No data yet</Text>
+                    <Ionicons name="analytics-outline" size={80} color="#eee" style={styles.emptyIcon} />
+                    <Text style={styles.emptyTitle}>Insights pending</Text>
                     <Text style={styles.emptyText}>
-                        Start logging your mood to see analytics
+                        Continue your practice to reveal patterns.
                     </Text>
                 </View>
             ) : (
                 <>
-                    {/* Summary Card */}
                     <View style={styles.summaryCard}>
-                        <Text style={styles.cardTitle}>Summary - {getTimeRangeLabel()}</Text>
+                        <Text style={styles.cardTitle}>Journey Summary</Text>
                         <View style={styles.summaryGrid}>
                             <View style={styles.summaryItem}>
                                 <Text style={styles.summaryValue}>{stats.totalEntries}</Text>
-                                <Text style={styles.summaryLabel}>Total Entries</Text>
+                                <Text style={styles.summaryLabel}>Moments</Text>
                             </View>
                             <View style={styles.summaryItem}>
                                 <Text style={styles.summaryValue}>
@@ -164,57 +169,35 @@ export const MoodAnalytics: React.FC<MoodAnalyticsProps> = ({
                         </View>
                     </View>
 
-                    {/* Mood Distribution */}
                     <View style={styles.card}>
-                        <Text style={styles.cardTitle}>Mood Distribution</Text>
+                        <Text style={styles.cardTitle}>Feeling Distribution</Text>
                         <View style={styles.barsContainer}>
-                            {Object.entries(stats.moodFrequency).map(([mood, count]) =>
-                                renderMoodBar(mood, count, stats.totalEntries)
-                            )}
+                            {Object.entries(stats.moodFrequency)
+                                .sort(([, a], [, b]) => b - a)
+                                .map(([mood, count]) =>
+                                    renderMoodBar(mood, count, stats.totalEntries)
+                                )}
                         </View>
                     </View>
 
-                    {/* Top Activities */}
-                    {stats.topActivities.length > 0 && (
-                        <View style={styles.card}>
-                            <Text style={styles.cardTitle}>Top Activities</Text>
-                            <View style={styles.activitiesList}>
-                                {stats.topActivities.map((item, index) => (
-                                    <View key={index} style={styles.activityItem}>
-                                        <View style={styles.activityRank}>
-                                            <Text style={styles.rankText}>{index + 1}</Text>
-                                        </View>
-                                        <Text style={styles.activityName}>{item.activity}</Text>
-                                        <View style={styles.activityCount}>
-                                            <Text style={styles.countText}>{item.count}</Text>
-                                        </View>
-                                    </View>
-                                ))}
-                            </View>
-                        </View>
-                    )}
-
-                    {/* Insights */}
                     <View style={styles.insightsCard}>
                         <View style={styles.insightTitleContainer}>
-                            <Ionicons name="bulb-outline" size={24} color="#FBC02D" style={styles.insightIcon} />
-                            <Text style={styles.cardTitle}>Insights</Text>
+                            <Ionicons name="sparkles-outline" size={20} color="#b8a17d" style={styles.insightIcon} />
+                            <Text style={styles.insightTitle}>Reflections</Text>
                         </View>
                         {stats.averageMoodScore >= 4 && (
                             <Text style={styles.insightText}>
-                                ✨ You're doing great! Your mood has been consistently positive.
+                                Your practice is flourishing. You've maintained a presence of gratitude and energy.
                             </Text>
                         )}
                         {stats.averageMoodScore < 3 && (
                             <Text style={styles.insightText}>
-                                🌱 Consider activities that boost your mood. Take care of yourself!
+                                This period has been challenging. Remember to breathe and return to the present moment.
                             </Text>
                         )}
-                        {stats.topActivities.length > 0 && (
-                            <Text style={styles.insightText}>
-                                🎯 You spend most time on: {stats.topActivities[0].activity}
-                            </Text>
-                        )}
+                        <Text style={styles.insightText}>
+                            Consistent logging helps you understand the ebb and flow of your awakening.
+                        </Text>
                     </View>
                 </>
             )}
@@ -225,95 +208,100 @@ export const MoodAnalytics: React.FC<MoodAnalyticsProps> = ({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#f5f5f5',
+        marginTop: 100,
     },
     loadingText: {
         fontSize: 16,
-        color: '#666',
+        color: '#999',
     },
     timeRangeContainer: {
         flexDirection: 'row',
-        backgroundColor: '#fff',
-        borderRadius: 12,
+        backgroundColor: 'rgba(255, 255, 255, 0.5)',
+        borderRadius: 25,
         padding: 4,
-        marginBottom: 8,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
+        marginBottom: 20,
     },
     timeRangeButton: {
         flex: 1,
-        paddingVertical: 10,
-        borderRadius: 8,
+        paddingVertical: 8,
+        borderRadius: 20,
         alignItems: 'center',
     },
     timeRangeButtonActive: {
-        backgroundColor: '#007AFF',
+        backgroundColor: '#fff',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 2,
     },
     timeRangeText: {
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: '600',
-        color: '#666',
+        color: '#999',
     },
     timeRangeTextActive: {
-        color: '#fff',
+        color: '#333',
     },
     emptyContainer: {
         alignItems: 'center',
         padding: 40,
         backgroundColor: '#fff',
-        borderRadius: 16,
-        marginTop: 20,
+        borderRadius: 20,
+        marginTop: 40,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.03,
+        shadowRadius: 10,
+        elevation: 2,
     },
     emptyIcon: {
         marginBottom: 16,
     },
     emptyTitle: {
-        fontSize: 24,
-        fontWeight: '700',
-        color: '#1a1a1a',
+        fontSize: 20,
+        fontWeight: '600',
+        color: '#444',
         marginBottom: 8,
     },
     emptyText: {
-        fontSize: 16,
-        color: '#666',
+        fontSize: 15,
+        color: '#999',
         textAlign: 'center',
+        lineHeight: 22,
     },
     summaryCard: {
         backgroundColor: '#fff',
-        borderRadius: 16,
-        padding: 20,
-        marginBottom: 16,
+        borderRadius: 20,
+        padding: 24,
+        marginBottom: 20,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 3,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.03,
+        shadowRadius: 10,
+        elevation: 2,
     },
     card: {
         backgroundColor: '#fff',
-        borderRadius: 16,
-        padding: 20,
-        marginBottom: 16,
+        borderRadius: 20,
+        padding: 24,
+        marginBottom: 20,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 3,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.03,
+        shadowRadius: 10,
+        elevation: 2,
     },
     cardTitle: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: '#1a1a1a',
-        marginBottom: 16,
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: 20,
     },
     summaryGrid: {
         flexDirection: 'row',
@@ -323,109 +311,89 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     summaryValue: {
-        fontSize: 36,
+        fontSize: 32,
         fontWeight: '700',
-        color: '#007AFF',
+        color: '#8ac4c2',
         marginBottom: 4,
     },
     summaryLabel: {
-        fontSize: 14,
-        color: '#666',
-        fontWeight: '500',
+        fontSize: 13,
+        color: '#999',
+        fontWeight: '600',
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
     },
     barsContainer: {
-        gap: 12,
+        gap: 16,
     },
     barContainer: {
-        gap: 8,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
     },
     barLabel: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
+        width: 100,
     },
-    barEmoji: {
-        fontSize: 20,
+    barIconWrapper: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 10,
     },
     barText: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#333',
+        fontSize: 13,
+        fontWeight: '500',
+        color: '#666',
+        flex: 1,
     },
     barWrapper: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
+        flex: 1,
+        justifyContent: 'flex-end',
     },
     bar: {
-        height: 24,
-        borderRadius: 12,
-        minWidth: 2,
+        height: 10,
+        borderRadius: 5,
+        marginRight: 10,
     },
     barCount: {
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: '700',
-        color: '#666',
-        minWidth: 30,
-    },
-    activitiesList: {
-        gap: 12,
-    },
-    activityItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-    },
-    activityRank: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: '#007AFF',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    rankText: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: '#fff',
-    },
-    activityName: {
-        flex: 1,
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#333',
-    },
-    activityCount: {
-        backgroundColor: '#f0f0f0',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 12,
-    },
-    countText: {
-        fontSize: 14,
-        fontWeight: '700',
-        color: '#666',
+        color: '#444',
+        width: 25,
+        textAlign: 'right',
     },
     insightsCard: {
-        backgroundColor: '#FFF9E6',
-        borderRadius: 16,
-        padding: 20,
-        marginBottom: 16,
-        borderWidth: 2,
-        borderColor: '#FFE082',
+        backgroundColor: '#fefaf2',
+        borderRadius: 20,
+        padding: 24,
+        marginBottom: 30,
+        borderWidth: 1,
+        borderColor: '#f2e8cf',
     },
     insightTitleContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 16,
+        marginBottom: 12,
+    },
+    insightTitle: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#b8a17d',
     },
     insightIcon: {
         marginRight: 8,
     },
     insightText: {
-        fontSize: 15,
-        color: '#333',
-        lineHeight: 22,
-        marginBottom: 8,
+        fontSize: 14,
+        color: '#8c7e6a',
+        lineHeight: 20,
+        marginBottom: 10,
     },
 });
+
