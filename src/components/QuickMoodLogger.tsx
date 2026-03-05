@@ -7,9 +7,6 @@ import {
     TextInput,
     Alert,
     Animated,
-    KeyboardAvoidingView,
-    ScrollView,
-    Platform,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { MoodType, MOOD_OPTIONS, MoodEntry, ACTIVITY_OPTIONS } from '../types';
@@ -82,107 +79,93 @@ export const QuickMoodLogger: React.FC<QuickMoodLoggerProps> = ({ onSaved, onMoo
     };
 
     return (
-        <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={styles.container}
-        >
-            <ScrollView
-                contentContainerStyle={styles.scrollContent}
-                keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={false}
+        <View style={styles.container}>
+            <View style={styles.card}>
+                <Text style={styles.sectionTitle}>How are you feeling?</Text>
+                <View style={styles.moodGrid}>
+                    {MOOD_OPTIONS.map((mood) => {
+                        const isSelected = selectedMood === mood.type;
+                        return (
+                            <TouchableOpacity
+                                key={mood.type}
+                                style={[
+                                    styles.moodButton,
+                                    isSelected && styles.moodButtonSelected,
+                                    { backgroundColor: mood.bgColor, borderColor: isSelected ? mood.color : '#fff' },
+                                ]}
+                                onPress={() => {
+                                    handleMoodSelect(mood.type);
+                                    onMoodChange?.(mood);
+                                }}
+                                activeOpacity={0.7}
+                            >
+                                <Animated.View style={{
+                                    transform: [{ scale: isSelected ? scaleAnim : 1 }],
+                                }}>
+                                    {mood.iconFamily === 'Ionicons' ? (
+                                        <Ionicons name={mood.icon as any} size={28} color={mood.color} />
+                                    ) : (
+                                        <MaterialCommunityIcons
+                                            name={mood.icon as any} size={28}
+                                            color={mood.color} />
+                                    )}
+                                </Animated.View>
+                            </TouchableOpacity>
+                        );
+                    })}
+                </View>
+
+                <Text style={[styles.sectionTitle, { marginTop: 24, marginBottom: 12 }]}>What are you doing?</Text>
+                <View style={styles.activityGrid}>
+                    {ACTIVITY_OPTIONS.map((activity) => {
+                        const isSelected = selectedActivities.includes(activity.id);
+                        return (
+                            <TouchableOpacity
+                                key={activity.id}
+                                style={[
+                                    styles.activityButton,
+                                    isSelected && styles.activityButtonSelected,
+                                ]}
+                                onPress={() => toggleActivity(activity.id)}
+                                activeOpacity={0.7}
+                            >
+                                <Text style={styles.activityEmoji}>{activity.emoji}</Text>
+                                <Text style={styles.activityLabel}>{activity.label}</Text>
+                            </TouchableOpacity>
+                        );
+                    })}
+                </View>
+            </View>
+
+            <View style={styles.inputSection}>
+                <Text style={styles.inputLabel}>Add a note (optional)</Text>
+                <TextInput
+                    style={styles.textInput}
+                    placeholder="Reflections, thoughts..."
+                    placeholderTextColor="#ccc"
+                    value={note}
+                    onChangeText={setNote}
+                    multiline={false}
+                />
+            </View>
+
+            <TouchableOpacity
+                style={styles.saveButton}
+                onPress={handleSave}
+                disabled={saving}
+                activeOpacity={0.8}
             >
-                <View style={styles.card}>
-                    <Text style={styles.sectionTitle}>How are you feeling?</Text>
-                    <View style={styles.moodGrid}>
-                        {MOOD_OPTIONS.map((mood) => {
-                            const isSelected = selectedMood === mood.type;
-                            return (
-                                <TouchableOpacity
-                                    key={mood.type}
-                                    style={[
-                                        styles.moodButton,
-                                        isSelected && styles.moodButtonSelected,
-                                        { backgroundColor: mood.bgColor, borderColor: isSelected ? mood.color : '#fff' },
-                                    ]}
-                                    onPress={() => {
-                                        handleMoodSelect(mood.type);
-                                        onMoodChange?.(mood);
-                                    }}
-                                    activeOpacity={0.7}
-                                >
-                                    <Animated.View style={{
-                                        transform: [{ scale: isSelected ? scaleAnim : 1 }],
-                                    }}>
-                                        {mood.iconFamily === 'Ionicons' ? (
-                                            <Ionicons name={mood.icon as any} size={28} color={mood.color} />
-                                        ) : (
-                                            <MaterialCommunityIcons
-                                                name={mood.icon as any} size={28}
-                                                color={mood.color} />
-                                        )}
-                                    </Animated.View>
-                                </TouchableOpacity>
-                            );
-                        })}
-                    </View>
-
-                    <Text style={[styles.sectionTitle, { marginTop: 24, marginBottom: 12 }]}>What are you doing?</Text>
-                    <View style={styles.activityGrid}>
-                        {ACTIVITY_OPTIONS.map((activity) => {
-                            const isSelected = selectedActivities.includes(activity.id);
-                            return (
-                                <TouchableOpacity
-                                    key={activity.id}
-                                    style={[
-                                        styles.activityButton,
-                                        isSelected && styles.activityButtonSelected,
-                                    ]}
-                                    onPress={() => toggleActivity(activity.id)}
-                                    activeOpacity={0.7}
-                                >
-                                    <Text style={styles.activityEmoji}>{activity.emoji}</Text>
-                                    <Text style={styles.activityLabel}>{activity.label}</Text>
-                                </TouchableOpacity>
-                            );
-                        })}
-                    </View>
-                </View>
-
-                <View style={styles.inputSection}>
-                    <Text style={styles.inputLabel}>Add a note (optional)</Text>
-                    <TextInput
-                        style={styles.textInput}
-                        placeholder="Reflections, thoughts..."
-                        placeholderTextColor="#ccc"
-                        value={note}
-                        onChangeText={setNote}
-                        multiline={false}
-                    />
-                </View>
-
-                <TouchableOpacity
-                    style={styles.saveButton}
-                    onPress={handleSave}
-                    disabled={saving}
-                    activeOpacity={0.8}
-                >
-                    <Text style={styles.saveButtonText}>
-                        {saving ? 'Saving...' : 'Save'}
-                    </Text>
-                </TouchableOpacity>
-            </ScrollView>
-        </KeyboardAvoidingView>
+                <Text style={styles.saveButtonText}>
+                    {saving ? 'Saving...' : 'Save'}
+                </Text>
+            </TouchableOpacity>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
         width: '100%',
-    },
-    scrollContent: {
-        flexGrow: 1,
-        paddingBottom: 24,
     },
     card: {
         backgroundColor: '#fff',

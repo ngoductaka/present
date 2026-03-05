@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -37,10 +37,20 @@ export const LogMoodScreen = () => {
         >
             <SafeAreaView style={styles.safeArea}>
                 <StatusBar style="dark" />
-                <View style={styles.content}>
-                    <Text style={styles.title}>Log Your Moment</Text>
-                    <QuickMoodLogger onSaved={handleMoodSaved} onMoodChange={handleMoodChange} />
-                </View>
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                    style={styles.keyboardContainer}
+                >
+                    <ScrollView
+                        contentContainerStyle={styles.content}
+                        showsVerticalScrollIndicator={false}
+                        keyboardShouldPersistTaps="handled"
+                        keyboardDismissMode="on-drag"
+                    >
+                        <Text style={styles.title}>Log Your Moment</Text>
+                        <QuickMoodLogger onSaved={handleMoodSaved} onMoodChange={handleMoodChange} />
+                    </ScrollView>
+                </KeyboardAvoidingView>
             </SafeAreaView>
         </LinearGradient>
     );
@@ -51,6 +61,9 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     safeArea: {
+        flex: 1,
+    },
+    keyboardContainer: {
         flex: 1,
     },
     header: {
@@ -83,15 +96,16 @@ const styles = StyleSheet.create({
         marginTop: 4,
     },
     content: {
-        flex: 1,
+        flexGrow: 1,
         paddingHorizontal: 20,
+        paddingBottom: 48,
     },
     title: {
-        fontSize: 22,
+        fontSize: 18,
         fontWeight: '600',
         color: '#444',
         textAlign: 'center',
-        marginBottom: 20,
+        marginBottom: 12,
+        marginTop: 4,
     },
 });
-
