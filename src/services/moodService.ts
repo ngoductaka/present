@@ -99,7 +99,9 @@ export const calculateMoodStats = async (
 
     entries.forEach((entry) => {
       // Count mood frequency
-      moodFrequency[entry.mood]++;
+      if (entry.mood in moodFrequency) {
+        moodFrequency[entry.mood as MoodType]++;
+      }
 
       // Calculate score
       const moodOption = MOOD_OPTIONS.find((m) => m.type === entry.mood);

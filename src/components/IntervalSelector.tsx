@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useLanguage } from '../context/LanguageContext';
 
 interface IntervalSelectorProps {
     value: 30 | 60;
@@ -7,9 +8,10 @@ interface IntervalSelectorProps {
 }
 
 export const IntervalSelector: React.FC<IntervalSelectorProps> = ({ value, onChange }) => {
+    const { t } = useLanguage();
     return (
         <View style={styles.container}>
-            <Text style={styles.label}>Notification Interval</Text>
+            <Text style={styles.label}>{t('notifications.intervalLabel')}</Text>
             <View style={styles.buttonContainer}>
                 <TouchableOpacity
                     style={[
@@ -22,7 +24,7 @@ export const IntervalSelector: React.FC<IntervalSelectorProps> = ({ value, onCha
                         styles.buttonText,
                         value === 30 && styles.buttonTextActive,
                     ]}>
-                        30 min
+                        {t('notifications.interval30')}
                     </Text>
                 </TouchableOpacity>
 
@@ -37,7 +39,7 @@ export const IntervalSelector: React.FC<IntervalSelectorProps> = ({ value, onCha
                         styles.buttonText,
                         value === 60 && styles.buttonTextActive,
                     ]}>
-                        1 hour
+                        {t('notifications.interval60')}
                     </Text>
                 </TouchableOpacity>
             </View>

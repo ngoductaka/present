@@ -13,8 +13,10 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { TimePicker } from '../components/TimePicker';
 import { IntervalSelector } from '../components/IntervalSelector';
+import { LanguageSwitchButton } from '../components/LanguageSwitchButton';
 import { NotificationSettings } from '../types';
 import { saveSettings, loadSettings } from '../utils/storage';
+import { useLanguage } from '../context/LanguageContext';
 import {
     requestPermissions,
     scheduleNotifications,
@@ -24,6 +26,7 @@ import {
 } from '../services/notificationService';
 
 export const NotificationsScreen = () => {
+    const { t } = useLanguage();
     const [settings, setSettings] = useState<NotificationSettings>({
         startTime: '08:00',
         endTime: '20:00',
@@ -76,7 +79,7 @@ export const NotificationsScreen = () => {
         const endMinutes = endHour * 60 + endMin;
 
         if (endMinutes <= startMinutes) {
-            Alert.alert('Invalid Time Range', 'End time must be after start time.');
+            Alert.alert(t('alerts.invalidRangeTitle'), t('alerts.invalidRangeMessage'));
             return false;
         }
 
@@ -94,14 +97,17 @@ export const NotificationsScreen = () => {
             const hasPermission = await requestPermissions();
             if (!hasPermission) {
                 Alert.alert(
-                    'Permission Required',
-                    'Please enable notifications in your device settings.'
+                    t('alerts.permissionTitle'),
+                    t('alerts.permissionMessage')
                 );
                 setLoading(false);
                 return;
             }
 
-            await scheduleNotifications(settings);
+            await scheduleNotifications(settings, {
+                title: t('notifications.reminderTitle'),
+                body: t('notifications.reminderBody'),
+            });
 
             const newSettings = { ...settings, isActive: true };
             setSettings(newSettings);
@@ -110,12 +116,12 @@ export const NotificationsScreen = () => {
             await updateScheduledCount();
 
             Alert.alert(
-                'Success',
-                'Notifications have been scheduled successfully!'
+                t('alerts.successTitle'),
+                t('alerts.scheduledSuccess')
             );
         } catch (error) {
             console.error('Error starting notifications:', error);
-            Alert.alert('Error', 'Failed to schedule notifications. Please try again.');
+            Alert.alert(t('alerts.errorTitle'), t('alerts.scheduleFailed'));
         } finally {
             setLoading(false);
         }
@@ -133,10 +139,10 @@ export const NotificationsScreen = () => {
 
             setScheduledCount(0);
 
-            Alert.alert('Success', 'All notifications have been cancelled.');
+            Alert.alert(t('alerts.successTitle'), t('alerts.cancelledSuccess'));
         } catch (error) {
             console.error('Error stopping notifications:', error);
-            Alert.alert('Error', 'Failed to cancel notifications. Please try again.');
+            Alert.alert(t('alerts.errorTitle'), t('alerts.cancelFailed'));
         } finally {
             setLoading(false);
         }
@@ -147,16 +153,19 @@ export const NotificationsScreen = () => {
             const hasPermission = await requestPermissions();
             if (!hasPermission) {
                 Alert.alert(
-                    'Permission Required',
-                    'Please enable notifications in your device settings.'
+                    t('alerts.permissionTitle'),
+                    t('alerts.permissionMessage')
                 );
                 return;
             }
-            await sendTestNotification();
-            Alert.alert('Sent', 'Test notification sent! It should appear in 1 second.');
+            await sendTestNotification({
+                title: t('notifications.testTitle'),
+                body: t('notifications.testBody'),
+            });
+            Alert.alert(t('alerts.sentTitle'), t('alerts.sentMessage'));
         } catch (error) {
             console.error('Error sending test notification:', error);
-            Alert.alert('Error', 'Failed to send test notification.');
+            Alert.alert(t('alerts.errorTitle'), t('alerts.testFailed'));
         }
     };
 
@@ -173,24 +182,27 @@ export const NotificationsScreen = () => {
             <StatusBar style="dark" />
             <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
                 <View style={styles.header}>
+                    <View style={styles.languageSwitchRow}>
+                        <LanguageSwitchButton />
+                    </View>
                     <View style={styles.titleContainer}>
                         <Ionicons name="notifications-circle" size={40} color="#007AFF" style={styles.headerIcon} />
-                        <Text style={styles.title}>Reminders</Text>
+                        <Text style={styles.title}>{t('notifications.title')}</Text>
                     </View>
                     <Text style={styles.subtitle}>
-                        Schedule recurring notifications within your preferred time range
+                        {t('notifications.subtitle')}
                     </Text>
                 </View>
 
                 <View style={styles.card}>
                     <TimePicker
-                        label="Start Time"
+                        label={t('notifications.startTime')}
                         value={settings.startTime}
                         onChange={handleStartTimeChange}
                     />
 
                     <TimePicker
-                        label="End Time"
+                        label={t('notifications.endTime')}
                         value={settings.endTime}
                         onChange={handleEndTimeChange}
                     />
@@ -205,7 +217,7 @@ export const NotificationsScreen = () => {
                             <View style={styles.statusBadge}>
                                 <Ionicons name="checkmark-circle" size={20} color="#2e7d32" style={styles.statusIcon} />
                                 <Text style={styles.statusText}>
-                                    Active • {scheduledCount} notifications scheduled
+                                    {t('notifications.activeStatus', { count: scheduledCount })}
                                 </Text>
                             </View>
                         </View>
@@ -223,7 +235,7 @@ export const NotificationsScreen = () => {
                                 ) : (
                                     <View style={styles.buttonInner}>
                                         <Ionicons name="play" size={20} color="#fff" style={styles.buttonIcon} />
-                                        <Text style={styles.buttonText}>Start Notifications</Text>
+                                        <Text style={styles.buttonText}>{t('notifications.startButton')}</Text>
                                     </View>
                                 )}
                             </TouchableOpacity>
@@ -238,7 +250,7 @@ export const NotificationsScreen = () => {
                                 ) : (
                                     <View style={styles.buttonInner}>
                                         <Ionicons name="stop" size={20} color="#fff" style={styles.buttonIcon} />
-                                        <Text style={styles.buttonText}>Stop Notifications</Text>
+                                        <Text style={styles.buttonText}>{t('notifications.stopButton')}</Text>
                                     </View>
                                 )}
                             </TouchableOpacity>
@@ -251,7 +263,7 @@ export const NotificationsScreen = () => {
                         >
                             <View style={styles.buttonInner}>
                                 <Ionicons name="flash" size={20} color="#fff" style={styles.buttonIcon} />
-                                <Text style={styles.buttonText}>Send Test Notification</Text>
+                                <Text style={styles.buttonText}>{t('notifications.testButton')}</Text>
                             </View>
                         </TouchableOpacity>
                     </View>
@@ -260,24 +272,24 @@ export const NotificationsScreen = () => {
                 <View style={styles.infoCard}>
                     <View style={styles.infoTitleContainer}>
                         <Ionicons name="information-circle" size={24} color="#007AFF" style={styles.infoIcon} />
-                        <Text style={styles.infoTitle}>How it works</Text>
+                        <Text style={styles.infoTitle}>{t('notifications.howItWorks')}</Text>
                     </View>
                     <View style={styles.infoItem}>
                         <Ionicons name="time-outline" size={18} color="#666" style={styles.infoItemIcon} />
                         <Text style={styles.infoText}>
-                            Notifications will be sent at regular intervals within your time range
+                            {t('notifications.infoInterval')}
                         </Text>
                     </View>
                     <View style={styles.infoItem}>
                         <Ionicons name="volume-medium-outline" size={18} color="#666" style={styles.infoItemIcon} />
                         <Text style={styles.infoText}>
-                            Notifications include sound and will appear even when the app is closed
+                            {t('notifications.infoSound')}
                         </Text>
                     </View>
                     <View style={styles.infoItem}>
                         <Ionicons name="save-outline" size={18} color="#666" style={styles.infoItemIcon} />
                         <Text style={styles.infoText}>
-                            Your settings are saved automatically
+                            {t('notifications.infoSaved')}
                         </Text>
                     </View>
                 </View>
@@ -305,6 +317,9 @@ const styles = StyleSheet.create({
     },
     header: {
         marginBottom: 24,
+    },
+    languageSwitchRow: {
+        marginBottom: 10,
     },
     titleContainer: {
         flexDirection: 'row',

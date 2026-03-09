@@ -5,8 +5,10 @@ import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { QuickMoodLogger } from '../components/QuickMoodLogger';
+import { useLanguage } from '../context/LanguageContext';
 
 export const LogMoodScreen = () => {
+    const { t } = useLanguage();
     const [refreshKey, setRefreshKey] = useState(0);
     const [gradientColors, setGradientColors] = useState<[string, string, ...string[]]>(['#FAEBB6', '#DDE5B6', '#AFD9C9', '#C8E3E8', '#D7E8F0']);
 
@@ -47,7 +49,7 @@ export const LogMoodScreen = () => {
                         keyboardShouldPersistTaps="handled"
                         keyboardDismissMode="on-drag"
                     >
-                        <Text style={styles.title}>Log Your Moment</Text>
+                        <Text style={styles.title}>{t('logMood.title')}</Text>
                         <QuickMoodLogger onSaved={handleMoodSaved} onMoodChange={handleMoodChange} />
                     </ScrollView>
                 </KeyboardAvoidingView>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Image, Animated, Dimensions, Text, Platform } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
+import { useLanguage } from '../context/LanguageContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -9,6 +10,7 @@ interface CustomSplashScreenProps {
 }
 
 export const CustomSplashScreen: React.FC<CustomSplashScreenProps> = ({ onFinish }) => {
+    const { t } = useLanguage();
     const [fadeAnim] = useState(new Animated.Value(0));
     const [scaleAnim] = useState(new Animated.Value(0.95));
     const [textFadeAnim] = useState(new Animated.Value(0));
@@ -65,8 +67,8 @@ export const CustomSplashScreen: React.FC<CustomSplashScreenProps> = ({ onFinish
             <View style={styles.overlay}>
                 <Animated.View style={[styles.contentContainer, { transform: [{ scale: scaleAnim }] }]}>
                     <Animated.View style={{ opacity: textFadeAnim, alignItems: 'center', justifyContent: 'center', paddingTop: 200 }}>
-                        <Text style={styles.titleText}>Present</Text>
-                        <Text style={styles.subtitleText}>Mindfulness & Awakening</Text>
+                        <Text style={styles.titleText}>{t('splash.title')}</Text>
+                        <Text style={styles.subtitleText}>{t('splash.subtitle')}</Text>
                     </Animated.View>
                 </Animated.View>
             </View>

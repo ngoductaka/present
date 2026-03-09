@@ -7,16 +7,19 @@ import {
     ScrollView,
     TouchableOpacity,
     Alert,
+    Image,
 } from 'react-native';
 import { MoodEntry, MOOD_OPTIONS, ACTIVITY_OPTIONS } from '../types';
 import { getAllMoodEntries, deleteMoodEntry } from '../services/moodService';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
+import { useLanguage } from '../context/LanguageContext';
 
 interface MoodHistoryProps {
     refreshTrigger?: number;
 }
 
 export const MoodHistory: React.FC<MoodHistoryProps> = ({ refreshTrigger }) => {
+    const { t, locale } = useLanguage();
     const [entries, setEntries] = useState<MoodEntry[]>([]);
     const [groupedEntries, setGroupedEntries] = useState<
         Record<string, MoodEntry[]>
@@ -30,7 +33,7 @@ export const MoodHistory: React.FC<MoodHistoryProps> = ({ refreshTrigger }) => {
         const grouped: Record<string, MoodEntry[]> = {};
         allEntries.forEach((entry) => {
             const date = new Date(entry.timestamp);
-            const dateKey = date.toLocaleDateString('en-US', {
+            const dateKey = date.toLocaleDateString(locale, {
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
@@ -58,12 +61,12 @@ export const MoodHistory: React.FC<MoodHistoryProps> = ({ refreshTrigger }) => {
 
     const handleDelete = (entry: MoodEntry) => {
         Alert.alert(
-            'Delete Entry',
-            'Are you sure you want to delete this mood entry?',
+            t('history.deleteTitle'),
+            t('history.deleteMessage'),
             [
-                { text: 'Cancel', style: 'cancel' },
+                { text: t('common.cancel'), style: 'cancel' },
                 {
-                    text: 'Delete',
+                    text: t('common.delete'),
                     style: 'destructive',
                     onPress: async () => {
                         await deleteMoodEntry(entry.id);
@@ -76,10 +79,9 @@ export const MoodHistory: React.FC<MoodHistoryProps> = ({ refreshTrigger }) => {
 
     const formatTime = (timestamp: number) => {
         const date = new Date(timestamp);
-        return date.toLocaleTimeString('en-US', {
+        return date.toLocaleTimeString(locale, {
             hour: 'numeric',
             minute: '2-digit',
-            hour12: true,
         });
     };
 
@@ -96,9 +98,9 @@ export const MoodHistory: React.FC<MoodHistoryProps> = ({ refreshTrigger }) => {
         return (
             <View style={styles.emptyContainer}>
                 <Ionicons name="document-text-outline" size={80} color="#ccc" style={styles.emptyIcon} />
-                <Text style={styles.emptyTitle}>No entries yet</Text>
+                <Text style={styles.emptyTitle}>{t('history.emptyTitle')}</Text>
                 <Text style={styles.emptyText}>
-                    Log your first moment to see it here
+                    {t('history.emptyText')}
                 </Text>
             </View>
         );
@@ -119,14 +121,16 @@ export const MoodHistory: React.FC<MoodHistoryProps> = ({ refreshTrigger }) => {
                                 <View style={styles.entryHeader}>
                                     <View style={styles.moodContainer}>
                                         <View style={[styles.iconWrapper, { backgroundColor: moodOption?.bgColor || '#f0f0f0' }]}>
-                                            {moodOption?.iconFamily === 'Ionicons' ? (
-                                                <Ionicons name={moodOption.icon as any} size={24} color={moodOption.color} />
-                                            ) : (
-                                                <MaterialCommunityIcons name={moodOption?.icon as any} size={24} color={moodOption?.color} />
+                                            {moodOption && (
+                                                <Image
+                                                    source={moodOption.image}
+                                                    style={{ width: 24, height: 24 }}
+                                                    resizeMode="contain"
+                                                />
                                             )}
                                         </View>
                                         <View style={styles.entryTextContent}>
-                                            <Text style={styles.moodLabel}>{moodOption?.label}</Text>
+                                            <Text style={styles.moodLabel}>{moodOption ? t(`mood.${moodOption.type}`) : entry.mood}</Text>
                                             <Text style={styles.timeText}>{formatTime(entry.timestamp)}</Text>
                                         </View>
                                     </View>
@@ -245,4 +249,3 @@ const styles = StyleSheet.create({
         lineHeight: 22,
     },
 });
-

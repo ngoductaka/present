@@ -2,6 +2,11 @@ import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import { NotificationSettings } from '../types';
 
+interface NotificationContentInput {
+  title: string;
+  body: string;
+}
+
 // Configure notification behavior
 // This handler controls how notifications appear when the app is in the FOREGROUND
 // When app is in background or killed, notifications are automatically shown by the OS
@@ -29,7 +34,6 @@ export const requestPermissions = async (): Promise<boolean> => {
     }
 
     if (finalStatus !== 'granted') {
-      alert('Permission to send notifications was denied!');
       return false;
     }
 
@@ -98,7 +102,8 @@ const calculateNotificationTimes = (settings: NotificationSettings): Date[] => {
  * Schedule all notifications based on settings
  */
 export const scheduleNotifications = async (
-  settings: NotificationSettings
+  settings: NotificationSettings,
+  content: NotificationContentInput
 ): Promise<void> => {
   try {
     // Cancel all existing notifications first
@@ -113,8 +118,8 @@ export const scheduleNotifications = async (
 
       await Notifications.scheduleNotificationAsync({
         content: {
-          title: 'Reminder',
-          body: 'Time for your scheduled notification!',
+          title: content.title,
+          body: content.body,
           sound: 'default',
           priority: Notifications.AndroidNotificationPriority.HIGH,
         },
@@ -162,12 +167,14 @@ export const getScheduledNotificationsCount = async (): Promise<number> => {
 /**
  * Send a test notification immediately
  */
-export const sendTestNotification = async (): Promise<void> => {
+export const sendTestNotification = async (
+  content: NotificationContentInput
+): Promise<void> => {
   try {
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: '🔔 Test Notification',
-        body: 'This is a test notification. If you see this, notifications are working!',
+        title: content.title,
+        body: content.body,
         sound: 'default',
         priority: Notifications.AndroidNotificationPriority.HIGH,
       },

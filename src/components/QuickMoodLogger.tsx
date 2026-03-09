@@ -7,10 +7,11 @@ import {
     TextInput,
     Alert,
     Animated,
+    Image,
 } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { MoodType, MOOD_OPTIONS, MoodEntry, ACTIVITY_OPTIONS } from '../types';
 import { saveMoodEntry } from '../services/moodService';
+import { useLanguage } from '../context/LanguageContext';
 
 interface QuickMoodLoggerProps {
     onSaved?: () => void;
@@ -18,6 +19,7 @@ interface QuickMoodLoggerProps {
 }
 
 export const QuickMoodLogger: React.FC<QuickMoodLoggerProps> = ({ onSaved, onMoodChange }) => {
+    const { t } = useLanguage();
     const [selectedMood, setSelectedMood] = useState<MoodType | null>(null);
     const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
     const [note, setNote] = useState('');
@@ -50,7 +52,7 @@ export const QuickMoodLogger: React.FC<QuickMoodLoggerProps> = ({ onSaved, onMoo
 
     const handleSave = async () => {
         if (!selectedMood) {
-            Alert.alert('Select Mood', 'Please select how you\'re feeling');
+            Alert.alert(t('alerts.selectMoodTitle'), t('alerts.selectMoodMessage'));
             return;
         }
 
@@ -69,10 +71,10 @@ export const QuickMoodLogger: React.FC<QuickMoodLoggerProps> = ({ onSaved, onMoo
             setSelectedActivities([]);
             setNote('');
             onMoodChange?.(null);
-            Alert.alert('Saved!', 'Your moment has been captured ✨');
+            Alert.alert(t('alerts.savedTitle'), t('alerts.savedMessage'));
             onSaved?.();
         } catch (error) {
-            Alert.alert('Error', 'Failed to save entry');
+            Alert.alert(t('alerts.errorTitle'), t('alerts.saveFailed'));
         } finally {
             setSaving(false);
         }
@@ -81,7 +83,7 @@ export const QuickMoodLogger: React.FC<QuickMoodLoggerProps> = ({ onSaved, onMoo
     return (
         <View style={styles.container}>
             <View style={styles.card}>
-                <Text style={styles.sectionTitle}>How are you feeling?</Text>
+                <Text style={styles.sectionTitle}>{t('logger.howFeeling')}</Text>
                 <View style={styles.moodGrid}>
                     {MOOD_OPTIONS.map((mood) => {
                         const isSelected = selectedMood === mood.type;
@@ -102,20 +104,27 @@ export const QuickMoodLogger: React.FC<QuickMoodLoggerProps> = ({ onSaved, onMoo
                                 <Animated.View style={{
                                     transform: [{ scale: isSelected ? scaleAnim : 1 }],
                                 }}>
-                                    {mood.iconFamily === 'Ionicons' ? (
-                                        <Ionicons name={mood.icon as any} size={28} color={mood.color} />
-                                    ) : (
-                                        <MaterialCommunityIcons
-                                            name={mood.icon as any} size={28}
-                                            color={mood.color} />
-                                    )}
+                                    <Image 
+                                        source={mood.image} 
+                                        style={styles.moodImage}
+                                        resizeMode="contain"
+                                    />
                                 </Animated.View>
+                                <Text
+                                    style={[
+                                        styles.moodLabel,
+                                        { color: isSelected ? mood.color : '#666' },
+                                    ]}
+                                    numberOfLines={1}
+                                >
+                                    {t(`mood.${mood.type}`)}
+                                </Text>
                             </TouchableOpacity>
                         );
                     })}
                 </View>
 
-                <Text style={[styles.sectionTitle, { marginTop: 24, marginBottom: 12 }]}>What are you doing?</Text>
+                <Text style={[styles.sectionTitle, { marginTop: 24, marginBottom: 12 }]}>{t('logger.whatDoing')}</Text>
                 <View style={styles.activityGrid}>
                     {ACTIVITY_OPTIONS.map((activity) => {
                         const isSelected = selectedActivities.includes(activity.id);
@@ -130,7 +139,7 @@ export const QuickMoodLogger: React.FC<QuickMoodLoggerProps> = ({ onSaved, onMoo
                                 activeOpacity={0.7}
                             >
                                 <Text style={styles.activityEmoji}>{activity.emoji}</Text>
-                                <Text style={styles.activityLabel}>{activity.label}</Text>
+                                <Text style={styles.activityLabel}>{t(`activity.${activity.id}`)}</Text>
                             </TouchableOpacity>
                         );
                     })}
@@ -138,10 +147,10 @@ export const QuickMoodLogger: React.FC<QuickMoodLoggerProps> = ({ onSaved, onMoo
             </View>
 
             <View style={styles.inputSection}>
-                <Text style={styles.inputLabel}>Add a note (optional)</Text>
+                <Text style={styles.inputLabel}>{t('logger.addNote')}</Text>
                 <TextInput
                     style={styles.textInput}
-                    placeholder="Reflections, thoughts..."
+                    placeholder={t('logger.notePlaceholder')}
                     placeholderTextColor="#ccc"
                     value={note}
                     onChangeText={setNote}
@@ -156,7 +165,7 @@ export const QuickMoodLogger: React.FC<QuickMoodLoggerProps> = ({ onSaved, onMoo
                 activeOpacity={0.8}
             >
                 <Text style={styles.saveButtonText}>
-                    {saving ? 'Saving...' : 'Save'}
+                    {saving ? t('logger.saving') : t('logger.save')}
                 </Text>
             </TouchableOpacity>
         </View>
@@ -195,13 +204,11 @@ const styles = StyleSheet.create({
         width: '22%',
         borderWidth: 2,
         borderColor: '#fff',
-        // aspectRatio: 1,
-        paddingVertical: 20,
-        borderRadius: 100,
-        // display: 'flex',
-        // flexDirection: 'column',
+        paddingVertical: 12,
+        borderRadius: 24,
         justifyContent: 'center',
         alignItems: 'center',
+        gap: 6,
     },
     moodButtonSelected: {
         borderWidth: 2,
@@ -211,6 +218,15 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 2,
+    },
+    moodImage: {
+        width: 38,
+        height: 38,
+    },
+    moodLabel: {
+        fontSize: 10,
+        fontWeight: '600',
+        textAlign: 'center',
     },
     inputSection: {
         marginBottom: 25,

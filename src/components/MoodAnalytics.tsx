@@ -7,10 +7,12 @@ import {
     ScrollView,
     TouchableOpacity,
     Dimensions,
+    Image,
 } from 'react-native';
 import { MoodStats, MOOD_OPTIONS } from '../types';
 import { calculateMoodStats } from '../services/moodService';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
+import { useLanguage } from '../context/LanguageContext';
 
 const { width } = Dimensions.get('window');
 
@@ -23,6 +25,7 @@ interface MoodAnalyticsProps {
 export const MoodAnalytics: React.FC<MoodAnalyticsProps> = ({
     refreshTrigger,
 }) => {
+    const { t } = useLanguage();
     const [timeRange, setTimeRange] = useState<TimeRange>('week');
     const [stats, setStats] = useState<MoodStats | null>(null);
 
@@ -58,21 +61,24 @@ export const MoodAnalytics: React.FC<MoodAnalyticsProps> = ({
 
     const renderMoodBar = (mood: string, count: number, total: number) => {
         const moodOption = MOOD_OPTIONS.find((m) => m.type === mood);
-        const percentage = total > 0 ? (count / total) * 100 : 0;
-        const availableWidth = width - 180;
+        const availableWidth = width - 205;
         const barWidth = total > 0 ? (count / total) * availableWidth : 0;
 
         return (
             <View key={mood} style={styles.barContainer}>
                 <View style={styles.barLabel}>
                     <View style={[styles.barIconWrapper, { backgroundColor: moodOption?.bgColor || '#f0f0f0' }]}>
-                        {moodOption?.iconFamily === 'Ionicons' ? (
-                            <Ionicons name={moodOption.icon as any} size={16} color={moodOption.color} />
-                        ) : (
-                            <MaterialCommunityIcons name={moodOption?.icon as any} size={16} color={moodOption?.color} />
+                        {moodOption && (
+                            <Image
+                                source={moodOption.image}
+                                style={{ width: 16, height: 16 }}
+                                resizeMode="contain"
+                            />
                         )}
                     </View>
-                    <Text style={styles.barText} numberOfLines={1}>{moodOption?.label}</Text>
+                    <Text style={styles.barText} numberOfLines={1}>
+                        {moodOption ? t(`mood.${moodOption.type}`) : mood}
+                    </Text>
                 </View>
                 <View style={styles.barWrapper}>
                     <View
@@ -91,28 +97,17 @@ export const MoodAnalytics: React.FC<MoodAnalyticsProps> = ({
     };
 
     const getMoodScoreLabel = (score: number) => {
-        if (score >= 4.5) return 'Radiant';
-        if (score >= 3.5) return 'Balanced';
-        if (score >= 2.5) return 'Steady';
-        if (score >= 1.5) return 'Unsettled';
-        return 'Low Energy';
-    };
-
-    const getTimeRangeLabel = () => {
-        switch (timeRange) {
-            case 'day':
-                return 'Today';
-            case 'week':
-                return 'Last 7 Days';
-            case 'month':
-                return 'Last 30 Days';
-        }
+        if (score >= 4.5) return t('analytics.radiant');
+        if (score >= 3.5) return t('analytics.balanced');
+        if (score >= 2.5) return t('analytics.steady');
+        if (score >= 1.5) return t('analytics.unsettled');
+        return t('analytics.lowEnergy');
     };
 
     if (!stats) {
         return (
             <View style={styles.loadingContainer}>
-                <Text style={styles.loadingText}>Analyzing your journey...</Text>
+                <Text style={styles.loadingText}>{t('analytics.loading')}</Text>
             </View>
         );
     }
@@ -135,7 +130,7 @@ export const MoodAnalytics: React.FC<MoodAnalyticsProps> = ({
                                 timeRange === range && styles.timeRangeTextActive,
                             ]}
                         >
-                            {range === 'day' ? 'Today' : range === 'week' ? 'Week' : 'Month'}
+                            {range === 'day' ? t('analytics.today') : range === 'week' ? t('analytics.week') : t('analytics.month')}
                         </Text>
                     </TouchableOpacity>
                 ))}
@@ -144,19 +139,19 @@ export const MoodAnalytics: React.FC<MoodAnalyticsProps> = ({
             {stats.totalEntries === 0 ? (
                 <View style={styles.emptyContainer}>
                     <Ionicons name="analytics-outline" size={80} color="#eee" style={styles.emptyIcon} />
-                    <Text style={styles.emptyTitle}>Insights pending</Text>
+                    <Text style={styles.emptyTitle}>{t('analytics.emptyTitle')}</Text>
                     <Text style={styles.emptyText}>
-                        Continue your practice to reveal patterns.
+                        {t('analytics.emptyText')}
                     </Text>
                 </View>
             ) : (
                 <>
                     <View style={styles.summaryCard}>
-                        <Text style={styles.cardTitle}>Journey Summary</Text>
+                        <Text style={styles.cardTitle}>{t('analytics.summaryTitle')}</Text>
                         <View style={styles.summaryGrid}>
                             <View style={styles.summaryItem}>
                                 <Text style={styles.summaryValue}>{stats.totalEntries}</Text>
-                                <Text style={styles.summaryLabel}>Moments</Text>
+                                <Text style={styles.summaryLabel}>{t('analytics.moments')}</Text>
                             </View>
                             <View style={styles.summaryItem}>
                                 <Text style={styles.summaryValue}>
@@ -170,7 +165,7 @@ export const MoodAnalytics: React.FC<MoodAnalyticsProps> = ({
                     </View>
 
                     <View style={styles.card}>
-                        <Text style={styles.cardTitle}>Feeling Distribution</Text>
+                        <Text style={styles.cardTitle}>{t('analytics.distributionTitle')}</Text>
                         <View style={styles.barsContainer}>
                             {Object.entries(stats.moodFrequency)
                                 .sort(([, a], [, b]) => b - a)
@@ -183,20 +178,20 @@ export const MoodAnalytics: React.FC<MoodAnalyticsProps> = ({
                     <View style={styles.insightsCard}>
                         <View style={styles.insightTitleContainer}>
                             <Ionicons name="sparkles-outline" size={20} color="#b8a17d" style={styles.insightIcon} />
-                            <Text style={styles.insightTitle}>Reflections</Text>
+                            <Text style={styles.insightTitle}>{t('analytics.reflectionsTitle')}</Text>
                         </View>
                         {stats.averageMoodScore >= 4 && (
                             <Text style={styles.insightText}>
-                                Your practice is flourishing. You've maintained a presence of gratitude and energy.
+                                {t('analytics.reflectionHigh')}
                             </Text>
                         )}
                         {stats.averageMoodScore < 3 && (
                             <Text style={styles.insightText}>
-                                This period has been challenging. Remember to breathe and return to the present moment.
+                                {t('analytics.reflectionLow')}
                             </Text>
                         )}
                         <Text style={styles.insightText}>
-                            Consistent logging helps you understand the ebb and flow of your awakening.
+                            {t('analytics.reflectionGeneral')}
                         </Text>
                     </View>
                 </>
@@ -278,7 +273,7 @@ const styles = StyleSheet.create({
     summaryCard: {
         backgroundColor: '#fff',
         borderRadius: 20,
-        padding: 24,
+        padding: 16,
         marginBottom: 20,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
@@ -289,7 +284,7 @@ const styles = StyleSheet.create({
     card: {
         backgroundColor: '#fff',
         borderRadius: 20,
-        padding: 24,
+        padding: 16,
         marginBottom: 20,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
@@ -324,7 +319,7 @@ const styles = StyleSheet.create({
         letterSpacing: 0.5,
     },
     barsContainer: {
-        gap: 16,
+        gap: 10,
     },
     barContainer: {
         flexDirection: 'row',
@@ -360,6 +355,7 @@ const styles = StyleSheet.create({
         height: 10,
         borderRadius: 5,
         marginRight: 10,
+        marginLeft: 10,
     },
     barCount: {
         fontSize: 13,
@@ -396,4 +392,3 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
 });
-

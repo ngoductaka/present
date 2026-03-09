@@ -9,6 +9,7 @@ import { NotificationsScreen } from './src/screens/NotificationsScreen';
 import { View } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { CustomSplashScreen } from './src/components/CustomSplashScreen';
+import { LanguageProvider, useLanguage } from './src/context/LanguageContext';
 
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -18,7 +19,8 @@ SplashScreen.preventAutoHideAsync();
 
 const Tab = createBottomTabNavigator();
 
-export default function App() {
+const AppContent = () => {
+  const { t } = useLanguage();
   const [appIsReady, setAppIsReady] = React.useState(false);
   const [showSplashScreen, setShowSplashScreen] = React.useState(true);
 
@@ -103,46 +105,46 @@ export default function App() {
                 }}
               >
                 <Tab.Screen
-                  name="Log Mood"
+                  name={t('tab.logMood')}
                   component={LogMoodScreen}
                   options={{
                     tabBarIcon: ({ color, size, focused }) => (
                       <Ionicons name={focused ? "happy" : "happy-outline"} size={size} color={color} />
                     ),
-                    headerTitle: 'Log Your Mood',
+                    headerTitle: t('header.logMood'),
                     headerShown: false,
                   }}
                 />
                 <Tab.Screen
-                  name="History"
+                  name={t('tab.history')}
                   component={HistoryScreen}
                   options={{
                     tabBarIcon: ({ color, size, focused }) => (
                       <Ionicons name={focused ? "journal" : "journal-outline"} size={size} color={color} />
                     ),
-                    headerTitle: 'Mood History',
+                    headerTitle: t('header.history'),
                     headerShown: false,
                   }}
                 />
                 <Tab.Screen
-                  name="Analytics"
+                  name={t('tab.analytics')}
                   component={AnalyticsScreen}
                   options={{
                     tabBarIcon: ({ color, size, focused }) => (
                       <Ionicons name={focused ? "stats-chart" : "stats-chart-outline"} size={size} color={color} />
                     ),
-                    headerTitle: 'Analytics',
+                    headerTitle: t('header.analytics'),
                     headerShown: false,
                   }}
                 />
                 <Tab.Screen
-                  name="Reminders"
+                  name={t('tab.reminders')}
                   component={NotificationsScreen}
                   options={{
                     tabBarIcon: ({ color, size, focused }) => (
                       <Ionicons name={focused ? "notifications" : "notifications-outline"} size={size} color={color} />
                     ),
-                    headerTitle: 'Reminders',
+                    headerTitle: t('header.reminders'),
                     headerShown: false,
                   }}
                 />
@@ -155,6 +157,12 @@ export default function App() {
       </SafeAreaProvider>
     </LinearGradient>
   );
+};
+
+export default function App() {
+  return (
+    <LanguageProvider>
+      <AppContent />
+    </LanguageProvider>
+  );
 }
-
-

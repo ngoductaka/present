@@ -7,6 +7,7 @@ import {
     Platform,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useLanguage } from '../context/LanguageContext';
 
 interface TimePickerProps {
     label: string;
@@ -15,6 +16,7 @@ interface TimePickerProps {
 }
 
 export const TimePicker: React.FC<TimePickerProps> = ({ label, value, onChange }) => {
+    const { t } = useLanguage();
     const [show, setShow] = useState(false);
     const [date, setDate] = useState(() => {
         const [hours, minutes] = value.split(':').map(Number);
@@ -63,7 +65,7 @@ export const TimePicker: React.FC<TimePickerProps> = ({ label, value, onChange }
                     />
                     {Platform.OS === 'ios' && (
                         <TouchableOpacity style={styles.doneButton} onPress={hideTimePicker}>
-                            <Text style={styles.doneButtonText}>Done</Text>
+                            <Text style={styles.doneButtonText}>{t('common.done')}</Text>
                         </TouchableOpacity>
                     )}
                 </View>
