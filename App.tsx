@@ -151,8 +151,8 @@ const AppContent = () => {
               </Tab.Navigator>
             </NavigationContainer>)
           }
-          <View style={{ position: 'absolute', bottom: 0, width: 500, height: 20, backgroundColor: 'red' }}>
-          </View>
+          {/* <View style={{ position: 'absolute', bottom: 0, width: 500, height: 20, backgroundColor: 'red' }}>
+          </View> */}
         </SafeAreaView>
       </SafeAreaProvider>
     </LinearGradient>
