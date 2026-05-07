@@ -99,7 +99,7 @@ const AppContent = () => {
       end={{ x: 0, y: 1 }}
     >
       <SafeAreaProvider>
-        <SafeAreaView style={{ flex: 1, position: 'relative' }}>
+        {/* <SafeAreaView style={{ flex: 1, position: 'relative' }}> */}
           {showSplashScreen ? (
             <CustomSplashScreen onFinish={handleSplashScreenFinish} />
           ) : (
@@ -154,7 +154,7 @@ const AppContent = () => {
           }
           {/* <View style={{ position: 'absolute', bottom: 0, width: 500, height: 20, backgroundColor: 'red' }}>
           </View> */}
-        </SafeAreaView>
+        {/* </SafeAreaView> */}
       </SafeAreaProvider>
     </LinearGradient>
   );

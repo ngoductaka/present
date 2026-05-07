@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  ImageBackground,
   StyleSheet,
   View,
   Text,
@@ -47,39 +48,53 @@ export const LogMoodScreen = () => {
   };
 
   return (
-    <LinearGradient
-      colors={gradientColors}
+    <ImageBackground
+      source={require('../../assets/bg1.jpg')}
       style={styles.container}
-      start={{ x: 1, y: 0 }}
-      end={{ x: 0, y: 1 }}
+      imageStyle={styles.backgroundImage}
     >
-      <StatusBar style='dark' />
-      {/* <KeyboardAvoidingView
+      <SafeAreaView style={{ flex: 1, position: 'relative' }}>
+        {/* <LinearGradient
+        colors={gradientColors}
+        style={styles.overlay}
+        start={{ x: 1, y: 0 }}
+        end={{ x: 0, y: 1 }}
+      > */}
+        <StatusBar style='dark' />
+        {/* <KeyboardAvoidingView
                     behavior={Platform.OS === 'ios' ? 'padding' : undefined}
                     style={styles.keyboardContainer}
                 > */}
-      <Text style={styles.title}>{t('logMood.title')}</Text>
-      <ScrollView
-        contentContainerStyle={styles.content}
-        // showsVerticalScrollIndicator={false}
-        // keyboardShouldPersistTaps="handled"
-        // keyboardDismissMode="on-drag"
-        // style={{ flex: 1, backgroundColor: 'blue' }}
-      >
-        {/* <Text style={styles.title}>{t('logMood.title')}</Text> */}
-        <View style={styles.calendarWrap}>
-                            <HomeCalendar locale={locale} />
-                        </View>
-        {/* <QuickMoodLogger onSaved={handleMoodSaved} onMoodChange={handleMoodChange} /> */}
-      </ScrollView>
-      {/* </KeyboardAvoidingView> */}
-    </LinearGradient>
+        <Text style={styles.title}>{t('logMood.title')}</Text>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          // showsVerticalScrollIndicator={false}
+          // keyboardShouldPersistTaps="handled"
+          // keyboardDismissMode="on-drag"
+          // style={{ flex: 1, backgroundColor: 'blue' }}
+        >
+          {/* <Text style={styles.title}>{t('logMood.title')}</Text> */}
+          <View style={styles.calendarWrap}>
+            <HomeCalendar locale={locale} />
+          </View>
+          {/* <QuickMoodLogger onSaved={handleMoodSaved} onMoodChange={handleMoodChange} /> */}
+        </ScrollView>
+        {/* </KeyboardAvoidingView> */}
+        {/* </LinearGradient> */}
+      </SafeAreaView>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  overlay: {
+    flex: 1,
+  },
+  backgroundImage: {
+    resizeMode: 'cover',
   },
   safeArea: {
     flex: 1,
