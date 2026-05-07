@@ -1,12 +1,12 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LogMoodScreen } from './src/screens/LogMoodScreen';
 import { HistoryScreen } from './src/screens/HistoryScreen';
 import { AnalyticsScreen } from './src/screens/AnalyticsScreen';
 import { NotificationsScreen } from './src/screens/NotificationsScreen';
-import { View } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { CustomSplashScreen } from './src/components/CustomSplashScreen';
 import { LanguageProvider, useLanguage } from './src/context/LanguageContext';
@@ -17,7 +17,46 @@ import { LinearGradient } from 'expo-linear-gradient';
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
-const Tab = createBottomTabNavigator();
+type RootStackParamList = {
+  Home: undefined;
+  History: undefined;
+  Analytics: undefined;
+  Notifications: undefined;
+};
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
+type QuickLinkButtonProps = {
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  onPress: () => void;
+};
+
+const QuickLinkButton = ({ icon, onPress }: QuickLinkButtonProps) => (
+  <Pressable onPress={onPress} style={styles.quickLinkButton}>
+    <Ionicons name={icon} size={20} color="#1a1a1a" />
+  </Pressable>
+);
+
+const HomeScreen = ({
+  navigation,
+}: {
+  navigation: {
+    navigate: (screen: keyof RootStackParamList) => void;
+  };
+}) => {
+  const insets = useSafeAreaInsets();
+
+  return (
+    <View style={styles.homeContainer}>
+      <LogMoodScreen />
+      <View style={[styles.quickLinks, { top: insets.top + 12 }]}>
+        <QuickLinkButton icon="journal-outline" onPress={() => navigation.navigate('History')} />
+        <QuickLinkButton icon="stats-chart-outline" onPress={() => navigation.navigate('Analytics')} />
+        <QuickLinkButton icon="notifications-outline" onPress={() => navigation.navigate('Notifications')} />
+      </View>
+    </View>
+  );
+};
 
 const AppContent = () => {
   const { t } = useLanguage();
@@ -65,36 +104,10 @@ const AppContent = () => {
             <CustomSplashScreen onFinish={handleSplashScreenFinish} />
           ) : (
             <NavigationContainer>
-              <Tab.Navigator
+              <Stack.Navigator
                 screenOptions={{
-                  tabBarActiveTintColor: '#007AFF',
-                  tabBarInactiveTintColor: '#8E8E93',
-                  tabBarStyle: {
-                    backgroundColor: '#fff',
-                    borderTopWidth: 1,
-                    borderTopColor: '#E5E5EA',
-                    paddingBottom: 8,
-                    paddingTop: 8,
-                    height: 65,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: -2 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 8,
-                    elevation: 10,
-                  },
-                  tabBarLabelStyle: {
-                    fontSize: 12,
-                    fontWeight: '600',
-                    marginTop: 4,
-                  },
                   headerStyle: {
                     backgroundColor: '#fff',
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 4,
-                    elevation: 4,
-                    height: 70,
                   },
                   headerTitleStyle: {
                     fontSize: 20,
@@ -102,53 +115,41 @@ const AppContent = () => {
                     color: '#1a1a1a',
                   },
                   headerTintColor: '#007AFF',
+                  headerShadowVisible: true,
+                  contentStyle: {
+                    backgroundColor: 'transparent',
+                  },
                 }}
               >
-                <Tab.Screen
-                  name={t('tab.logMood')}
-                  component={LogMoodScreen}
+                <Stack.Screen
+                  name="Home"
+                  component={HomeScreen}
                   options={{
-                    tabBarIcon: ({ color, size, focused }) => (
-                      <Ionicons name={focused ? "happy" : "happy-outline"} size={size} color={color} />
-                    ),
-                    headerTitle: t('header.logMood'),
                     headerShown: false,
                   }}
                 />
-                <Tab.Screen
-                  name={t('tab.history')}
+                <Stack.Screen
+                  name="History"
                   component={HistoryScreen}
                   options={{
-                    tabBarIcon: ({ color, size, focused }) => (
-                      <Ionicons name={focused ? "journal" : "journal-outline"} size={size} color={color} />
-                    ),
                     headerTitle: t('header.history'),
-                    headerShown: false,
                   }}
                 />
-                <Tab.Screen
-                  name={t('tab.analytics')}
+                <Stack.Screen
+                  name="Analytics"
                   component={AnalyticsScreen}
                   options={{
-                    tabBarIcon: ({ color, size, focused }) => (
-                      <Ionicons name={focused ? "stats-chart" : "stats-chart-outline"} size={size} color={color} />
-                    ),
                     headerTitle: t('header.analytics'),
-                    headerShown: false,
                   }}
                 />
-                <Tab.Screen
-                  name={t('tab.reminders')}
+                <Stack.Screen
+                  name="Notifications"
                   component={NotificationsScreen}
                   options={{
-                    tabBarIcon: ({ color, size, focused }) => (
-                      <Ionicons name={focused ? "notifications" : "notifications-outline"} size={size} color={color} />
-                    ),
                     headerTitle: t('header.reminders'),
-                    headerShown: false,
                   }}
                 />
-              </Tab.Navigator>
+              </Stack.Navigator>
             </NavigationContainer>)
           }
           {/* <View style={{ position: 'absolute', bottom: 0, width: 500, height: 20, backgroundColor: 'red' }}>
@@ -166,3 +167,26 @@ export default function App() {
     </LanguageProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  homeContainer: {
+    flex: 1,
+  },
+  quickLinks: {
+    position: 'absolute',
+    right: 16,
+    flexDirection: 'row',
+    gap: 8,
+    padding: 8,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255, 255, 255, 0.82)',
+  },
+  quickLinkButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.96)',
+  },
+});
