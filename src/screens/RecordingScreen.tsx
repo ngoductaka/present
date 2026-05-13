@@ -1,9 +1,7 @@
 import React from 'react';
 import {
-  ActivityIndicator,
   Alert,
-  Animated,
-  Easing,
+  FlatList,
   Pressable,
   SafeAreaView,
   StyleSheet,
@@ -22,14 +20,16 @@ import {
 } from 'expo-audio';
 import { uploadAudioFile, type UploadResponse } from '../services/audioUploadService';
 
-type VisualState = 'idle' | 'recording' | 'uploading' | 'success' | 'error';
-
-const STATE_INDEX: Record<VisualState, number> = {
-  idle: 0,
-  recording: 1,
-  uploading: 2,
-  success: 3,
-  error: 4,
+type RecordingItem = {
+  id: string;
+  uri: string;
+  title: string;
+  createdAt: number;
+  durationMillis: number;
+  uploadProgress: number;
+  uploadResponse: UploadResponse | null;
+  uploadError: string | null;
+  uploadStatus: 'idle' | 'uploading' | 'success' | 'error';
 };
 
 const setRecordingAudioMode = async () => {
@@ -56,6 +56,14 @@ const formatDuration = (durationMillis: number) => {
   return `${minutes}:${seconds}`;
 };
 
+const formatDate = (timestamp: number) =>
+  new Intl.DateTimeFormat(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(timestamp);
+
 const formatResponse = (response: UploadResponse | null) => {
   if (response == null || response === '') {
     return 'Uploaded';
@@ -75,38 +83,37 @@ const formatResponse = (response: UploadResponse | null) => {
 
   const compact = JSON.stringify(response);
 
-  return compact.length > 140 ? `${compact.slice(0, 137)}...` : compact;
+  return compact.length > 100 ? `${compact.slice(0, 97)}...` : compact;
+};
+
+const getStatusTone = (item: RecordingItem) => {
+  switch (item.uploadStatus) {
+    case 'success':
+      return styles.statusToneSuccess;
+    case 'uploading':
+      return styles.statusToneUploading;
+    case 'error':
+      return styles.statusToneError;
+    default:
+      return styles.statusToneIdle;
+  }
 };
 
 export function RecordingScreen() {
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recorderState = useAudioRecorderState(recorder, 200);
-  const [recordingUri, setRecordingUri] = React.useState<string | null>(null);
-  const [isUploading, setIsUploading] = React.useState(false);
-  const [uploadProgress, setUploadProgress] = React.useState(0);
-  const [error, setError] = React.useState<string | null>(null);
-  const [response, setResponse] = React.useState<UploadResponse | null>(null);
-  const player = useAudioPlayer(recordingUri ? { uri: recordingUri } : null, {
+  const [recordings, setRecordings] = React.useState<RecordingItem[]>([]);
+  const [activeRecordingId, setActiveRecordingId] = React.useState<string | null>(null);
+  const [screenError, setScreenError] = React.useState<string | null>(null);
+  const [playbackSource, setPlaybackSource] = React.useState<{ uri: string } | null>(null);
+  const player = useAudioPlayer(playbackSource, {
     updateInterval: 200,
   });
   const playerStatus = useAudioPlayerStatus(player);
 
-  const visualState: VisualState = recorderState.isRecording
-    ? 'recording'
-    : error
-      ? 'error'
-      : isUploading
-        ? 'uploading'
-        : response !== null
-          ? 'success'
-          : 'idle';
-
-  const colorAnim = React.useRef(new Animated.Value(STATE_INDEX.idle)).current;
-  const pulseAnim = React.useRef(new Animated.Value(1)).current;
-
   React.useEffect(() => {
     setPlaybackAudioMode().catch(() => {
-      setError('Audio unavailable');
+      setScreenError('Audio unavailable');
     });
 
     return () => {
@@ -115,91 +122,28 @@ export function RecordingScreen() {
   }, []);
 
   React.useEffect(() => {
-    if (!recordingUri) {
+    if (!playbackSource) {
       return;
     }
 
     player.pause();
     void player.seekTo(0).catch(() => undefined);
-  }, [player, recordingUri]);
+  }, [player, playbackSource]);
 
-  React.useEffect(() => {
-    Animated.timing(colorAnim, {
-      toValue: STATE_INDEX[visualState],
-      duration: 240,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: false,
-    }).start();
-  }, [colorAnim, visualState]);
+  const updateRecording = React.useCallback(
+    (id: string, updater: (item: RecordingItem) => RecordingItem) => {
+      setRecordings(current =>
+        current.map(item => {
+          if (item.id !== id) {
+            return item;
+          }
 
-  React.useEffect(() => {
-    if (visualState !== 'recording') {
-      pulseAnim.stopAnimation();
-      Animated.spring(pulseAnim, {
-        toValue: 1,
-        friction: 6,
-        tension: 80,
-        useNativeDriver: true,
-      }).start();
-      return;
-    }
-
-    const pulseLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.08,
-          duration: 700,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
+          return updater(item);
         }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 700,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ]),
-    );
-
-    pulseLoop.start();
-
-    return () => {
-      pulseLoop.stop();
-    };
-  }, [pulseAnim, visualState]);
-
-  const buttonColor = colorAnim.interpolate({
-    inputRange: [0, 1, 2, 3, 4],
-    outputRange: ['#9ca3af', '#ef4444', '#f59e0b', '#10b981', '#dc2626'],
-  });
-
-  const haloOpacity = colorAnim.interpolate({
-    inputRange: [0, 1, 2, 3, 4],
-    outputRange: [0.1, 0.22, 0.2, 0.18, 0.18],
-  });
-
-  const uploadRecording = async (fileUri: string) => {
-    setIsUploading(true);
-    setUploadProgress(0);
-    setError(null);
-    setResponse(null);
-
-    try {
-      const uploadResponse = await uploadAudioFile(fileUri, {
-        onProgress: progress => {
-          setUploadProgress(progress);
-        },
-      });
-
-      setResponse(uploadResponse);
-    } catch (uploadError) {
-      const message =
-        uploadError instanceof Error ? uploadError.message : 'Upload failed. Please try again.';
-      setError(message);
-    } finally {
-      setIsUploading(false);
-    }
-  };
+      );
+    },
+    [],
+  );
 
   const ensurePermission = async () => {
     const currentPermission = await getRecordingPermissionsAsync();
@@ -211,7 +155,7 @@ export function RecordingScreen() {
     const requestedPermission = await requestRecordingPermissionsAsync();
 
     if (!requestedPermission.granted) {
-      setError('Microphone permission is required.');
+      setScreenError('Microphone permission is required.');
 
       if (!requestedPermission.canAskAgain) {
         Alert.alert(
@@ -225,14 +169,12 @@ export function RecordingScreen() {
   };
 
   const handleStartRecording = async () => {
-    if (recorderState.isRecording || isUploading) {
+    if (recorderState.isRecording) {
       return;
     }
 
-    setError(null);
-    setResponse(null);
-    setUploadProgress(0);
-    setRecordingUri(null);
+    setScreenError(null);
+    setActiveRecordingId(null);
     player.pause();
 
     try {
@@ -248,7 +190,7 @@ export function RecordingScreen() {
     } catch (recordingError) {
       const message =
         recordingError instanceof Error ? recordingError.message : 'Unable to start recording.';
-      setError(message);
+      setScreenError(message);
     }
   };
 
@@ -257,7 +199,7 @@ export function RecordingScreen() {
       return;
     }
 
-    setError(null);
+    setScreenError(null);
 
     try {
       await recorder.stop();
@@ -270,15 +212,28 @@ export function RecordingScreen() {
         throw new Error('Recording file not found.');
       }
 
-      setRecordingUri(savedUri);
+      const createdAt = Date.now();
+      const item: RecordingItem = {
+        id: `${createdAt}`,
+        uri: savedUri,
+        title: `Recording ${recordings.length + 1}`,
+        createdAt,
+        durationMillis: recorderState.durationMillis,
+        uploadProgress: 0,
+        uploadResponse: null,
+        uploadError: null,
+        uploadStatus: 'idle',
+      };
+
+      setRecordings(current => [item, ...current]);
     } catch (recordingError) {
       const message =
         recordingError instanceof Error ? recordingError.message : 'Unable to stop recording.';
-      setError(message);
+      setScreenError(message);
     }
   };
 
-  const handleMainButtonPress = async () => {
+  const handleRecordPress = async () => {
     if (recorderState.isRecording) {
       await handleStopRecording();
       return;
@@ -287,15 +242,23 @@ export function RecordingScreen() {
     await handleStartRecording();
   };
 
-  const handlePlaybackToggle = async () => {
-    if (!recordingUri || recorderState.isRecording) {
+  const handlePlaybackToggle = async (item: RecordingItem) => {
+    if (recorderState.isRecording) {
       return;
     }
 
-    setError(null);
+    setScreenError(null);
 
     try {
       await setPlaybackAudioMode();
+
+      const isSameItem = activeRecordingId === item.id;
+
+      if (!isSameItem) {
+        setActiveRecordingId(item.id);
+        setPlaybackSource({ uri: item.uri });
+        return;
+      }
 
       if (playerStatus.didJustFinish || playerStatus.currentTime >= playerStatus.duration) {
         await player.seekTo(0);
@@ -310,132 +273,189 @@ export function RecordingScreen() {
     } catch (playbackError) {
       const message =
         playbackError instanceof Error ? playbackError.message : 'Unable to play recording.';
-      setError(message);
+      setScreenError(message);
     }
   };
 
-  const handleManualUpload = async () => {
-    if (!recordingUri || recorderState.isRecording || isUploading) {
+  React.useEffect(() => {
+    if (!activeRecordingId || !playbackSource) {
       return;
     }
 
-    player.pause();
+    if (playerStatus.isLoaded && !playerStatus.playing && playerStatus.currentTime === 0) {
+      player.play();
+    }
+  }, [activeRecordingId, playbackSource, player, playerStatus.currentTime, playerStatus.isLoaded, playerStatus.playing]);
+
+  const handleUpload = async (item: RecordingItem) => {
+    if (item.uploadStatus === 'uploading' || recorderState.isRecording) {
+      return;
+    }
+
+    if (activeRecordingId === item.id && playerStatus.playing) {
+      player.pause();
+    }
+
     await setPlaybackAudioMode();
-    await uploadRecording(recordingUri);
+
+    updateRecording(item.id, current => ({
+      ...current,
+      uploadStatus: 'uploading',
+      uploadProgress: 0,
+      uploadError: null,
+      uploadResponse: null,
+    }));
+
+    try {
+      const uploadResponse = await uploadAudioFile(item.uri, {
+        onProgress: progress => {
+          updateRecording(item.id, current => ({
+            ...current,
+            uploadStatus: 'uploading',
+            uploadProgress: progress,
+          }));
+        },
+      });
+
+      updateRecording(item.id, current => ({
+        ...current,
+        uploadStatus: 'success',
+        uploadProgress: 1,
+        uploadResponse: uploadResponse,
+        uploadError: null,
+      }));
+    } catch (uploadError) {
+      const message =
+        uploadError instanceof Error ? uploadError.message : 'Upload failed. Please try again.';
+
+      updateRecording(item.id, current => ({
+        ...current,
+        uploadStatus: 'error',
+        uploadError: message,
+        uploadResponse: null,
+      }));
+    }
   };
 
-  const statusText = recorderState.isRecording
-    ? formatDuration(recorderState.durationMillis)
-    : isUploading
-      ? `Uploading ${Math.max(1, Math.round(uploadProgress * 100))}%`
-      : playerStatus.playing
-        ? `Playing ${formatDuration(playerStatus.currentTime * 1000)}`
-        : response !== null
-          ? 'Uploaded'
-          : error
-            ? 'Upload failed'
-            : recordingUri
-              ? 'Ready to play'
-              : 'Tap to record';
-
-  const helperText = error
-    ? error
-    : response !== null
-      ? formatResponse(response)
-      : recordingUri
-        ? playerStatus.duration > 0
-          ? `Length ${formatDuration(playerStatus.duration * 1000)}`
-          : 'Ready to upload'
-        : 'One tap to start, one tap to stop';
+  const headerStatus = recorderState.isRecording
+    ? `Recording ${formatDuration(recorderState.durationMillis)}`
+    : screenError
+      ? screenError
+      : recordings.length === 0
+        ? 'Tap the red button to record'
+        : `${recordings.length} recording${recordings.length > 1 ? 's' : ''}`;
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <View style={styles.content}>
-          <Text style={styles.status}>{statusText}</Text>
+        <View style={styles.header}>
+          <Text style={styles.title}>All Recordings</Text>
+          <Text style={styles.subtitle}>{headerStatus}</Text>
+        </View>
 
-          <View style={styles.buttonStage}>
-            <Animated.View
-              pointerEvents="none"
-              style={[
-                styles.haloScale,
-                {
-                  transform: [{ scale: pulseAnim }],
-                },
-              ]}
-            >
-              <Animated.View
+        <FlatList
+          contentContainerStyle={styles.listContent}
+          data={recordings}
+          keyExtractor={item => item.id}
+          renderItem={({ item }) => {
+            const isActive = activeRecordingId === item.id;
+            const isPlaying = isActive && playerStatus.playing;
+            const playbackTime = isActive
+              ? Math.min(playerStatus.currentTime * 1000, item.durationMillis)
+              : 0;
+
+            return (
+              <View style={styles.row}>
+                <View style={styles.rowMain}>
+                  <View style={styles.rowTop}>
+                    <Text style={styles.rowTitle}>{item.title}</Text>
+                    <Text style={styles.rowDuration}>
+                      {isPlaying ? formatDuration(playbackTime) : formatDuration(item.durationMillis)}
+                    </Text>
+                  </View>
+
+                  <Text style={styles.rowMeta}>{formatDate(item.createdAt)}</Text>
+
+                  <View style={styles.waveTrack}>
+                    <View
+                      style={[
+                        styles.waveProgress,
+                        {
+                          width:
+                            isActive && item.durationMillis > 0
+                              ? `${Math.max(6, (playbackTime / item.durationMillis) * 100)}%`
+                              : '18%',
+                        },
+                      ]}
+                    />
+                  </View>
+
+                  <View style={styles.rowFooter}>
+                    <Pressable
+                      accessibilityRole="button"
+                      onPress={() => handlePlaybackToggle(item)}
+                      style={styles.secondaryButton}
+                    >
+                      <Text style={styles.secondaryButtonText}>
+                        {isPlaying ? 'Pause' : 'Play'}
+                      </Text>
+                    </Pressable>
+
+                    <Pressable
+                      accessibilityRole="button"
+                      disabled={item.uploadStatus === 'uploading'}
+                      onPress={() => void handleUpload(item)}
+                      style={[
+                        styles.uploadButton,
+                        item.uploadStatus === 'uploading' && styles.uploadButtonDisabled,
+                      ]}
+                    >
+                      <Text style={styles.uploadButtonText}>
+                        {item.uploadStatus === 'uploading' ? 'Uploading' : 'Upload'}
+                      </Text>
+                    </Pressable>
+                  </View>
+
+                  <View style={[styles.statusPill, getStatusTone(item)]}>
+                    <Text style={styles.statusPillText}>
+                      {item.uploadStatus === 'success'
+                        ? formatResponse(item.uploadResponse)
+                        : item.uploadStatus === 'uploading'
+                          ? `Uploading ${Math.max(1, Math.round(item.uploadProgress * 100))}%`
+                          : item.uploadStatus === 'error'
+                            ? item.uploadError ?? 'Upload failed'
+                            : 'Ready to upload'}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            );
+          }}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyTitle}>No recordings yet</Text>
+              <Text style={styles.emptyText}>Tap the record button to create your first memo.</Text>
+            </View>
+          }
+          showsVerticalScrollIndicator={false}
+        />
+
+        <View style={styles.bottomBar}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={recorderState.isRecording ? 'Stop recording' : 'Start recording'}
+            onPress={handleRecordPress}
+            style={styles.recordButtonShell}
+          >
+            <View style={styles.recordButtonOuter}>
+              <View
                 style={[
-                  styles.halo,
-                  {
-                    backgroundColor: buttonColor,
-                    opacity: haloOpacity,
-                  },
+                  styles.recordButtonInner,
+                  recorderState.isRecording && styles.recordButtonInnerActive,
                 ]}
               />
-            </Animated.View>
-
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={recorderState.isRecording ? 'Stop recording' : 'Start recording'}
-              disabled={isUploading}
-              onPress={handleMainButtonPress}
-              style={styles.centerButtonHitArea}
-            >
-              <Animated.View
-                style={[
-                  styles.recordButtonScale,
-                  {
-                    transform: [{ scale: pulseAnim }],
-                  },
-                ]}
-              >
-                <Animated.View
-                  style={[
-                    styles.recordButton,
-                    {
-                      backgroundColor: buttonColor,
-                    },
-                  ]}
-                >
-                  {isUploading ? (
-                    <ActivityIndicator color="#ffffff" size="large" />
-                  ) : (
-                    <Text style={styles.buttonLabel}>
-                      {recorderState.isRecording ? 'Stop' : 'Record'}
-                    </Text>
-                  )}
-                </Animated.View>
-              </Animated.View>
-            </Pressable>
-          </View>
-
-          <Text style={styles.helper}>{helperText}</Text>
-
-          {recordingUri ? (
-            <View style={styles.actionRow}>
-              <Pressable
-                accessibilityRole="button"
-                onPress={handlePlaybackToggle}
-                style={styles.secondaryButton}
-              >
-                <Text style={styles.secondaryButtonText}>
-                  {playerStatus.playing ? 'Pause' : 'Play'}
-                </Text>
-              </Pressable>
-
-              <Pressable
-                accessibilityRole="button"
-                disabled={isUploading}
-                onPress={handleManualUpload}
-                style={[styles.uploadButton, isUploading && styles.buttonDisabled]}
-              >
-                <Text style={styles.uploadButtonText}>Upload</Text>
-              </Pressable>
             </View>
-          ) : (
-            <View style={styles.playButtonPlaceholder} />
-          )}
+          </Pressable>
         </View>
       </View>
     </SafeAreaView>
@@ -445,120 +465,184 @@ export function RecordingScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#f5f5f7',
   },
   container: {
     flex: 1,
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 12,
+    backgroundColor: '#f5f5f7',
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: '#111111',
+  },
+  subtitle: {
+    marginTop: 6,
+    fontSize: 15,
+    color: '#6b7280',
+  },
+  listContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 120,
+  },
+  emptyState: {
+    marginTop: 120,
+    alignItems: 'center',
     paddingHorizontal: 24,
   },
-  content: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  status: {
-    minHeight: 26,
+  emptyTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#0f172a',
+    color: '#111111',
   },
-  buttonStage: {
-    marginTop: 28,
-    marginBottom: 24,
-    width: 240,
-    height: 240,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  halo: {
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-  },
-  haloScale: {
-    position: 'absolute',
-    width: 220,
-    height: 220,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  centerButtonHitArea: {
-    width: 200,
-    height: 200,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  recordButtonScale: {
-    width: 176,
-    height: 176,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  recordButton: {
-    width: 176,
-    height: 176,
-    borderRadius: 88,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#0f172a',
-    shadowOpacity: 0.16,
-    shadowRadius: 24,
-    shadowOffset: {
-      width: 0,
-      height: 14,
-    },
-    elevation: 10,
-  },
-  buttonLabel: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#ffffff',
-  },
-  helper: {
-    minHeight: 40,
-    maxWidth: 280,
-    fontSize: 14,
-    lineHeight: 20,
+  emptyText: {
+    marginTop: 8,
     textAlign: 'center',
-    color: '#64748b',
+    fontSize: 15,
+    lineHeight: 22,
+    color: '#6b7280',
   },
-  actionRow: {
+  row: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#d1d5db',
+    backgroundColor: '#ffffff',
+  },
+  rowMain: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+  },
+  rowTop: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 20,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  rowTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#111111',
+  },
+  rowDuration: {
+    fontSize: 17,
+    fontVariant: ['tabular-nums'],
+    color: '#111111',
+  },
+  rowMeta: {
+    marginTop: 4,
+    fontSize: 13,
+    color: '#6b7280',
+  },
+  waveTrack: {
+    marginTop: 14,
+    height: 4,
+    borderRadius: 999,
+    backgroundColor: '#e5e7eb',
+    overflow: 'hidden',
+  },
+  waveProgress: {
+    height: 4,
+    borderRadius: 999,
+    backgroundColor: '#111111',
+  },
+  rowFooter: {
+    marginTop: 16,
+    flexDirection: 'row',
+    gap: 10,
   },
   secondaryButton: {
-    minWidth: 112,
-    minHeight: 48,
-    borderRadius: 24,
-    paddingHorizontal: 20,
+    minHeight: 40,
+    minWidth: 92,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#e2e8f0',
+    borderRadius: 20,
+    backgroundColor: '#eceef2',
+    paddingHorizontal: 16,
   },
   secondaryButtonText: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#0f172a',
+    color: '#111111',
   },
   uploadButton: {
-    minWidth: 112,
-    minHeight: 48,
-    borderRadius: 24,
-    paddingHorizontal: 20,
+    minHeight: 40,
+    minWidth: 92,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#0f172a',
+    borderRadius: 20,
+    backgroundColor: '#007aff',
+    paddingHorizontal: 16,
+  },
+  uploadButtonDisabled: {
+    opacity: 0.55,
   },
   uploadButtonText: {
     fontSize: 15,
     fontWeight: '700',
     color: '#ffffff',
   },
-  buttonDisabled: {
-    opacity: 0.45,
+  statusPill: {
+    marginTop: 12,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    alignSelf: 'flex-start',
   },
-  playButtonPlaceholder: {
-    height: 68,
+  statusToneIdle: {
+    backgroundColor: '#f3f4f6',
+  },
+  statusToneUploading: {
+    backgroundColor: '#fff7ed',
+  },
+  statusToneSuccess: {
+    backgroundColor: '#ecfdf5',
+  },
+  statusToneError: {
+    backgroundColor: '#fef2f2',
+  },
+  statusPillText: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: '#374151',
+  },
+  bottomBar: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
+    left: 0,
+    alignItems: 'center',
+    paddingTop: 12,
+    paddingBottom: 28,
+    backgroundColor: 'rgba(245, 245, 247, 0.96)',
+  },
+  recordButtonShell: {
+    width: 92,
+    height: 92,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  recordButtonOuter: {
+    width: 82,
+    height: 82,
+    borderRadius: 41,
+    borderWidth: 6,
+    borderColor: '#d1d5db',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#ffffff',
+  },
+  recordButtonInner: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    backgroundColor: '#ff3b30',
+  },
+  recordButtonInnerActive: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
   },
 });
