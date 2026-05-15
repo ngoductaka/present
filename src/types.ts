@@ -38,6 +38,64 @@ export interface MoodStats {
   averageMoodScore: number; // 1-5 scale
 }
 
+export type DiaryEmotion =
+  | 'happy'
+  | 'sad'
+  | 'anxious'
+  | 'calm'
+  | 'not_sure';
+
+export type DiaryWeather = 'sunny' | 'cloudy' | 'rainy' | 'stormy';
+
+export type DiaryBodyState = 'tired' | 'ill' | 'strong' | 'stressed';
+
+export interface DiaryEntry {
+  id: string;
+  date: string; // YYYY-MM-DD
+  emotion?: DiaryEmotion;
+  weather?: DiaryWeather;
+  bodyStates: DiaryBodyState[];
+  content: string;
+  images: string[];
+  timeMarkers: string[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+export const DIARY_EMOTION_OPTIONS: Array<{
+  id: DiaryEmotion;
+  emoji: string;
+  labelKey: string;
+}> = [
+  { id: 'happy', emoji: '😊', labelKey: 'diary.emotion.happy' },
+  { id: 'sad', emoji: '😔', labelKey: 'diary.emotion.sad' },
+  { id: 'anxious', emoji: '😰', labelKey: 'diary.emotion.anxious' },
+  { id: 'calm', emoji: '😌', labelKey: 'diary.emotion.calm' },
+  { id: 'not_sure', emoji: '🤔', labelKey: 'diary.emotion.notSure' },
+];
+
+export const DIARY_WEATHER_OPTIONS: Array<{
+  id: DiaryWeather;
+  icon: string;
+  labelKey: string;
+}> = [
+  { id: 'sunny', icon: 'sunny-outline', labelKey: 'diary.weather.sunny' },
+  { id: 'cloudy', icon: 'cloud-outline', labelKey: 'diary.weather.cloudy' },
+  { id: 'rainy', icon: 'rainy-outline', labelKey: 'diary.weather.rainy' },
+  { id: 'stormy', icon: 'thunderstorm-outline', labelKey: 'diary.weather.stormy' },
+];
+
+export const DIARY_BODY_STATE_OPTIONS: Array<{
+  id: DiaryBodyState;
+  icon: string;
+  labelKey: string;
+}> = [
+  { id: 'tired', icon: 'moon-outline', labelKey: 'diary.body.tired' },
+  { id: 'ill', icon: 'bandage-outline', labelKey: 'diary.body.ill' },
+  { id: 'strong', icon: 'barbell-outline', labelKey: 'diary.body.strong' },
+  { id: 'stressed', icon: 'flash-outline', labelKey: 'diary.body.stressed' },
+];
+
 export const MOOD_OPTIONS: Array<{
   type: MoodType;
   image: any;

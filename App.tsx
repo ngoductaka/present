@@ -1,62 +1,22 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Pressable, StyleSheet, View } from 'react-native';
-import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LogMoodScreen } from './src/screens/LogMoodScreen';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { LogMoodScreen as HomeScreen } from './src/screens/LogMoodScreen';
 import { HistoryScreen } from './src/screens/HistoryScreen';
 import { AnalyticsScreen } from './src/screens/AnalyticsScreen';
 import { NotificationsScreen } from './src/screens/NotificationsScreen';
+import { DiaryEntryScreen } from './src/screens/DiaryEntryScreen';
 import * as SplashScreen from 'expo-splash-screen';
 import { CustomSplashScreen } from './src/components/CustomSplashScreen';
 import { LanguageProvider, useLanguage } from './src/context/LanguageContext';
-
-import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { RootStackParamList } from './src/navigation/types';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
-type RootStackParamList = {
-  Home: undefined;
-  History: undefined;
-  Analytics: undefined;
-  Notifications: undefined;
-};
-
 const Stack = createNativeStackNavigator<RootStackParamList>();
-
-type QuickLinkButtonProps = {
-  icon: React.ComponentProps<typeof Ionicons>['name'];
-  onPress: () => void;
-};
-
-const QuickLinkButton = ({ icon, onPress }: QuickLinkButtonProps) => (
-  <Pressable onPress={onPress} style={styles.quickLinkButton}>
-    <Ionicons name={icon} size={20} color="#1a1a1a" />
-  </Pressable>
-);
-
-const HomeScreen = ({
-  navigation,
-}: {
-  navigation: {
-    navigate: (screen: keyof RootStackParamList) => void;
-  };
-}) => {
-  const insets = useSafeAreaInsets();
-
-  return (
-    <View style={styles.homeContainer}>
-      <LogMoodScreen />
-      <View style={[styles.quickLinks, { top: insets.top + 12 }]}>
-        <QuickLinkButton icon="journal-outline" onPress={() => navigation.navigate('History')} />
-        <QuickLinkButton icon="stats-chart-outline" onPress={() => navigation.navigate('Analytics')} />
-        <QuickLinkButton icon="notifications-outline" onPress={() => navigation.navigate('Notifications')} />
-      </View>
-    </View>
-  );
-};
 
 const AppContent = () => {
   const { t } = useLanguage();
@@ -107,8 +67,9 @@ const AppContent = () => {
               <Stack.Navigator
                 screenOptions={{
                   headerStyle: {
-                    backgroundColor: '#fff',
+                    backgroundColor: 'transparent',
                   },
+                  headerTransparent: true,
                   headerTitleStyle: {
                     fontSize: 20,
                     fontWeight: '700',
@@ -149,6 +110,13 @@ const AppContent = () => {
                     headerTitle: t('header.reminders'),
                   }}
                 />
+                <Stack.Screen
+                  name="DiaryEntry"
+                  component={DiaryEntryScreen}
+                  options={{
+                    headerShown: false,
+                  }}
+                />
               </Stack.Navigator>
             </NavigationContainer>)
           }
@@ -167,26 +135,3 @@ export default function App() {
     </LanguageProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  homeContainer: {
-    flex: 1,
-  },
-  quickLinks: {
-    position: 'absolute',
-    right: 16,
-    flexDirection: 'row',
-    gap: 8,
-    padding: 8,
-    borderRadius: 999,
-    backgroundColor: 'rgba(255, 255, 255, 0.82)',
-  },
-  quickLinkButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.96)',
-  },
-});

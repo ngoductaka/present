@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useHeaderHeight } from '@react-navigation/elements';
 import {
     StyleSheet,
     Text,
@@ -27,6 +28,7 @@ import {
 
 export const NotificationsScreen = () => {
     const { t } = useLanguage();
+    const headerHeight = useHeaderHeight();
     const [settings, setSettings] = useState<NotificationSettings>({
         startTime: '08:00',
         endTime: '20:00',
@@ -180,7 +182,10 @@ export const NotificationsScreen = () => {
     return (
         <SafeAreaView style={styles.safeArea}>
             <StatusBar style="dark" />
-            <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+            <ScrollView
+                style={styles.container}
+                contentContainerStyle={[styles.contentContainer, { paddingTop: headerHeight + 10 }]}
+            >
                 <View style={styles.header}>
                     <View style={styles.languageSwitchRow}>
                         <LanguageSwitchButton />

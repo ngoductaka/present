@@ -165,7 +165,9 @@ export const QuickMoodLogger: React.FC<QuickMoodLoggerProps> = ({ onSaved, onMoo
                 activeOpacity={0.8}
             >
                 <Text style={styles.saveButtonText}>
-                    {saving ? t('logger.saving') : t('logger.save')}
+                    {/* {saving ? t('logger.saving') : t('logger.save')}
+                    d */}
+                    sdfasfdasdf
                 </Text>
             </TouchableOpacity>
         </View>

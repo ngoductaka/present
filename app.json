@@ -16,12 +16,18 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.notificationscheduler.app",
       "infoPlist": {
-        "UIBackgroundModes": ["remote-notification"]
+        "UIBackgroundModes": ["remote-notification"],
+        "NSCameraUsageDescription": "Present uses the camera so you can take photos and attach them to your diary entries.",
+        "NSPhotoLibraryUsageDescription": "Present uses your photo library so you can choose images to attach to your diary entries.",
+        "NSPhotoLibraryAddUsageDescription": "Present saves selected diary images in the app so they remain available with your entries."
       }
     },
     "android": {
       "package": "com.notificationscheduler.app",
       "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES",
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE",
         "POST_NOTIFICATIONS"

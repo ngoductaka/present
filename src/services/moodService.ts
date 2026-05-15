@@ -8,7 +8,9 @@ const MOOD_ENTRIES_KEY = '@mood_entries';
  */
 export const saveMoodEntry = async (entry: MoodEntry): Promise<void> => {
   try {
+
     const entries = await getAllMoodEntries();
+    console.log('Current mood entries before saving:', entries, entry);
     entries.unshift(entry); // Add to beginning (most recent first)
     await AsyncStorage.setItem(MOOD_ENTRIES_KEY, JSON.stringify(entries));
   } catch (error) {
@@ -23,6 +25,7 @@ export const saveMoodEntry = async (entry: MoodEntry): Promise<void> => {
 export const getAllMoodEntries = async (): Promise<MoodEntry[]> => {
   try {
     const data = await AsyncStorage.getItem(MOOD_ENTRIES_KEY);
+    console.log('Loaded mood entries:', data);
     return data ? JSON.parse(data) : [];
   } catch (error) {
     console.error('Error loading mood entries:', error);
@@ -164,6 +167,26 @@ export const getMoodEntriesByDate = async (): Promise<
     return grouped;
   } catch (error) {
     console.error('Error grouping mood entries:', error);
+    return {};
+  }
+};
+
+export const getLatestMoodByDate = async (): Promise<Record<string, MoodType>> => {
+  try {
+    const entries = await getAllMoodEntries();
+    const latestMoodByDate: Record<string, MoodType> = {};
+
+    entries.forEach((entry) => {
+      const dateKey = new Date(entry.timestamp).toISOString().split('T')[0];
+
+      if (!latestMoodByDate[dateKey]) {
+        latestMoodByDate[dateKey] = entry.mood;
+      }
+    });
+
+    return latestMoodByDate;
+  } catch (error) {
+    console.error('Error getting latest mood by date:', error);
     return {};
   }
 };
