@@ -165,9 +165,7 @@ export const QuickMoodLogger: React.FC<QuickMoodLoggerProps> = ({ onSaved, onMoo
                 activeOpacity={0.8}
             >
                 <Text style={styles.saveButtonText}>
-                    {/* {saving ? t('logger.saving') : t('logger.save')}
-                    d */}
-                    sdfasfdasdf
+                    {saving ? t('logger.saving') : t('logger.save')}
                 </Text>
             </TouchableOpacity>
         </View>
@@ -199,13 +197,13 @@ const styles = StyleSheet.create({
     moodGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        justifyContent: 'space-between',
-        rowGap: 20,
+        gap: 12,
     },
     moodButton: {
-        width: '22%',
+        width: '30.5%',
         borderWidth: 2,
         borderColor: '#fff',
+        paddingHorizontal: 8,
         paddingVertical: 12,
         borderRadius: 24,
         justifyContent: 'center',
@@ -222,11 +220,11 @@ const styles = StyleSheet.create({
         elevation: 2,
     },
     moodImage: {
-        width: 38,
-        height: 38,
+        width: 42,
+        height: 42,
     },
     moodLabel: {
-        fontSize: 10,
+        fontSize: 11,
         fontWeight: '600',
         textAlign: 'center',
     },

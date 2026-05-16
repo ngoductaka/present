@@ -7,6 +7,7 @@ import { HistoryScreen } from './src/screens/HistoryScreen';
 import { AnalyticsScreen } from './src/screens/AnalyticsScreen';
 import { NotificationsScreen } from './src/screens/NotificationsScreen';
 import { DiaryEntryScreen } from './src/screens/DiaryEntryScreen';
+import { SettingsScreen } from './src/screens/SettingsScreen';
 import * as SplashScreen from 'expo-splash-screen';
 import { CustomSplashScreen } from './src/components/CustomSplashScreen';
 import { LanguageProvider, useLanguage } from './src/context/LanguageContext';
@@ -101,6 +102,13 @@ const AppContent = () => {
                   component={AnalyticsScreen}
                   options={{
                     headerTitle: t('header.analytics'),
+                  }}
+                />
+                <Stack.Screen
+                  name="Settings"
+                  component={SettingsScreen}
+                  options={{
+                    headerShown: false,
                   }}
                 />
                 <Stack.Screen

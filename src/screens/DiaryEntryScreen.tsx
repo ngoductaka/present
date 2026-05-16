@@ -260,12 +260,6 @@ export const DiaryEntryScreen = ({
     removeImageFromDraft(uri);
   };
 
-  const scrollEditorToEnd = React.useCallback((animated = false) => {
-    requestAnimationFrame(() => {
-      scrollViewRef.current?.scrollToEnd({ animated });
-    });
-  }, []);
-
   const formattedUpdatedAt = React.useMemo(() => {
     if (!lastSavedAt) {
       return null;
@@ -349,7 +343,7 @@ export const DiaryEntryScreen = ({
 
         <KeyboardAvoidingView
           style={styles.container}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
             <View style={styles.pageHeader}>
               <TouchableOpacity
@@ -373,6 +367,7 @@ export const DiaryEntryScreen = ({
               keyboardVisible && styles.contentWithKeyboardToolbar,
             ]}
             keyboardShouldPersistTaps='handled'
+            keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.editorSheet}>
@@ -394,7 +389,7 @@ export const DiaryEntryScreen = ({
                     }}
                     activeOpacity={0.85}
                   >
-                    <Ionicons name='images-outline' size={18} color='#1f6f78' />
+                    <Ionicons name='images-outline' size={20} color='#1f6f78' />
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.editIconButton}
@@ -403,24 +398,29 @@ export const DiaryEntryScreen = ({
                     }}
                     activeOpacity={0.85}
                   >
-                    <Ionicons name='camera-outline' size={18} color='#1f6f78' />
+                    <Ionicons name='camera-outline' size={20} color='#1f6f78' />
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.editIconButton}
                     onPress={() => setShowSetupModal(true)}
                     activeOpacity={0.85}
                   >
-                    <Ionicons name='create-outline' size={18} color='#1f6f78' />
+                    <Ionicons name='create-outline' size={20} color='#1f6f78' />
                   </TouchableOpacity>
                 </View>
               </View>
 
-              <View style={styles.metaRow}>
+              <Pressable
+                style={styles.metaRow}
+                onPress={() => setShowSetupModal(true)}
+              >
                 {selectedEmotion ? (
                   <View style={styles.metaChip}>
-                    <Text style={styles.metaChipEmoji}>
-                      {selectedEmotion.emoji}
-                    </Text>
+                    <Image
+                      source={selectedEmotion.image}
+                      style={styles.metaChipEmotionImage}
+                      resizeMode='contain'
+                    />
                     <Text style={styles.metaChipText}>
                       {t(selectedEmotion.labelKey)}
                     </Text>
@@ -470,7 +470,7 @@ export const DiaryEntryScreen = ({
                     </View>
                   );
                 })}
-              </View>
+              </Pressable>
 
               {draft.images.length ? (
                 <View style={styles.imageGrid}>
@@ -504,8 +504,6 @@ export const DiaryEntryScreen = ({
                 placeholder={t('diary.contentPlaceholder')}
                 placeholderTextColor='#8fa3a6'
                 value={draft.content}
-                onFocus={() => scrollEditorToEnd(true)}
-                onContentSizeChange={() => scrollEditorToEnd(false)}
                 onChangeText={(content) => updateDraft({ content })}
               />
             </View>
@@ -640,6 +638,7 @@ const styles = StyleSheet.create({
     height: 38,
   },
   content: {
+    flexGrow: 1,
     paddingHorizontal: 14,
     paddingBottom: 40,
     gap: 14,
@@ -712,8 +711,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
-    marginTop: 14,
-    marginBottom: 12,
+    marginTop: 5,
+    marginBottom: 5,
   },
   metaChip: {
     flexDirection: 'row',
@@ -722,10 +721,11 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: '#f2f6f5',
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 5,
   },
-  metaChipEmoji: {
-    fontSize: 15,
+  metaChipEmotionImage: {
+    width: 30,
+    height: 30,
   },
   metaChipText: {
     fontSize: 13,

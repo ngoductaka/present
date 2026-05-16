@@ -65,40 +65,6 @@ const parseTime = (timeStr: string): { hours: number; minutes: number } => {
 };
 
 /**
- * Calculate all notification times based on settings
- */
-const calculateNotificationTimes = (settings: NotificationSettings): Date[] => {
-  const { startTime, endTime, interval } = settings;
-  const start = parseTime(startTime);
-  const end = parseTime(endTime);
-
-  const times: Date[] = [];
-  const now = new Date();
-
-  // Start from the start time
-  let currentMinutes = start.hours * 60 + start.minutes;
-  const endMinutes = end.hours * 60 + end.minutes;
-
-  while (currentMinutes <= endMinutes) {
-    const notificationTime = new Date(now);
-    notificationTime.setHours(Math.floor(currentMinutes / 60));
-    notificationTime.setMinutes(currentMinutes % 60);
-    notificationTime.setSeconds(0);
-    notificationTime.setMilliseconds(0);
-
-    // If the time has passed today, schedule for tomorrow
-    if (notificationTime <= now) {
-      notificationTime.setDate(notificationTime.getDate() + 1);
-    }
-
-    times.push(notificationTime);
-    currentMinutes += interval;
-  }
-
-  return times;
-};
-
-/**
  * Schedule all notifications based on settings
  */
 export const scheduleNotifications = async (
@@ -109,29 +75,23 @@ export const scheduleNotifications = async (
     // Cancel all existing notifications first
     await cancelAllNotifications();
 
-    const times = calculateNotificationTimes(settings);
+    const { hours, minutes } = parseTime(settings.time);
 
-    for (const time of times) {
-      // Create a daily repeating trigger
-      const hour = time.getHours();
-      const minute = time.getMinutes();
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: content.title,
+        body: content.body,
+        sound: 'default',
+        priority: Notifications.AndroidNotificationPriority.HIGH,
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DAILY,
+        hour: hours,
+        minute: minutes,
+      },
+    });
 
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: content.title,
-          body: content.body,
-          sound: 'default',
-          priority: Notifications.AndroidNotificationPriority.HIGH,
-        },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.DAILY,
-          hour,
-          minute,
-        },
-      });
-    }
-
-    console.log(`Scheduled ${times.length} notifications`);
+    console.log('Scheduled daily notification');
   } catch (error) {
     console.error('Error scheduling notifications:', error);
     throw error;

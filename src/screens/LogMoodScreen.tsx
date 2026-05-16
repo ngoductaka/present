@@ -1,5 +1,6 @@
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { ImageBackground, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ImageBackground, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,7 +8,11 @@ import { StatusBar } from 'expo-status-bar';
 import { useLanguage } from '../context/LanguageContext';
 import { HomeCalendar } from '../components/HomeCalendar';
 import { RootStackParamList } from '../navigation/types';
-import { getDiaryEntryDates, getDiaryEmotionByDate } from '../services/diaryService';
+import {
+  getDiaryEntryDates,
+  getDiaryEmotionByDate,
+  getDiaryImagesByDate,
+} from '../services/diaryService';
 import { getLatestMoodByDate } from '../services/moodService';
 import { DiaryEmotion, MoodType } from '../types';
 
@@ -24,22 +29,27 @@ export const LogMoodScreen = ({ navigation }: LogMoodScreenProps) => {
   const [emotionByDate, setEmotionByDate] = React.useState<
     Partial<Record<string, DiaryEmotion>>
   >({});
+  const [diaryImagesByDate, setDiaryImagesByDate] = React.useState<
+    Partial<Record<string, string[]>>
+  >({});
 
   useFocusEffect(
     React.useCallback(() => {
       let isActive = true;
 
       const loadCalendarData = async () => {
-        const [dates, moods, emotions] = await Promise.all([
+        const [dates, moods, emotions, images] = await Promise.all([
           getDiaryEntryDates(),
           getLatestMoodByDate(),
           getDiaryEmotionByDate(),
+          getDiaryImagesByDate(),
         ]);
 
         if (isActive) {
           setEntryDates(dates);
           setMoodByDate(moods);
           setEmotionByDate(emotions);
+          setDiaryImagesByDate(images);
         }
       };
 
@@ -59,7 +69,16 @@ export const LogMoodScreen = ({ navigation }: LogMoodScreenProps) => {
     >
       <SafeAreaView style={styles.safeArea}>
         <StatusBar style="dark" />
-        <Text style={styles.title}>{t('logMood.title')}</Text>
+        <View style={styles.header}>
+          <Text style={styles.title}>{t('logMood.title')}</Text>
+          <TouchableOpacity
+            style={styles.settingsButton}
+            onPress={() => navigation.navigate('Settings')}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="settings-outline" size={20} color="#d45c8f" />
+          </TouchableOpacity>
+        </View>
         <ScrollView contentContainerStyle={styles.content}>
           <View style={styles.calendarWrap}>
             <HomeCalendar
@@ -67,6 +86,7 @@ export const LogMoodScreen = ({ navigation }: LogMoodScreenProps) => {
               entryDates={entryDates}
               moodByDate={moodByDate}
               emotionByDate={emotionByDate}
+              diaryImagesByDate={diaryImagesByDate}
               onDatePress={(date) => navigation.navigate('DiaryEntry', { date })}
             />
           </View>
@@ -91,13 +111,26 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 10,
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    marginBottom: 18,
+    marginTop: 4,
+  },
   title: {
     fontSize: 18,
     fontWeight: '600',
     color: '#444',
-    textAlign: 'center',
-    marginBottom: 18,
-    marginTop: 4,
+  },
+  settingsButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(248, 231, 238, 0.96)',
   },
   calendarWrap: {
     marginHorizontal: -20,

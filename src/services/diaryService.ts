@@ -1,6 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system/legacy';
-import { DiaryEntry, DiaryEmotion } from '../types';
+import {
+  DiaryEntry,
+  DiaryEmotion,
+  normalizeDiaryEmotion,
+} from '../types';
 
 const DIARY_ENTRIES_KEY = '@diary_entries';
 const DIARY_IMAGE_DIRECTORY = `${FileSystem.documentDirectory ?? ''}diary-images`;
@@ -38,6 +42,13 @@ const getFileExtension = (uri: string) => {
   return match ? match[1].toLowerCase() : 'jpg';
 };
 
+const normalizeDiaryEntry = (
+  entry: DiaryEntry | (DiaryEntry & { emotion?: string })
+): DiaryEntry => ({
+  ...entry,
+  emotion: normalizeDiaryEmotion(entry.emotion),
+});
+
 export const createEmptyDiaryEntry = (date: string): DiaryEntry => {
   const now = Date.now();
 
@@ -65,7 +76,8 @@ export const getDiaryEntryByDate = async (
   date: string
 ): Promise<DiaryEntry | null> => {
   const entries = await readDiaryEntries();
-  return entries[date] ?? null;
+  const entry = entries[date];
+  return entry ? normalizeDiaryEntry(entry) : null;
 };
 
 export const getDiaryEntryDates = async (): Promise<string[]> => {
@@ -81,14 +93,36 @@ export const getDiaryEmotionByDate = async (): Promise<
     const emotionByDate: Partial<Record<string, DiaryEmotion>> = {};
 
     Object.values(entries).forEach((entry) => {
-      if (entry.emotion) {
-        emotionByDate[entry.date] = entry.emotion;
+      const emotion = normalizeDiaryEmotion(entry.emotion);
+
+      if (emotion) {
+        emotionByDate[entry.date] = emotion;
       }
     });
 
     return emotionByDate;
   } catch (error) {
     console.error('Error loading diary emotion by date:', error);
+    return {};
+  }
+};
+
+export const getDiaryImagesByDate = async (): Promise<
+  Partial<Record<string, string[]>>
+> => {
+  try {
+    const entries = await readDiaryEntries();
+    const imagesByDate: Partial<Record<string, string[]>> = {};
+
+    Object.values(entries).forEach((entry) => {
+      if (entry.images.length > 0) {
+        imagesByDate[entry.date] = entry.images;
+      }
+    });
+
+    return imagesByDate;
+  } catch (error) {
+    console.error('Error loading diary images by date:', error);
     return {};
   }
 };
@@ -109,7 +143,7 @@ export const upsertDiaryEntry = async (entry: DiaryEntry): Promise<DiaryEntry> =
     const entries = await readDiaryEntries();
     const existingEntry = entries[entry.date];
     const nextEntry: DiaryEntry = {
-      ...entry,
+      ...normalizeDiaryEntry(entry),
       createdAt: existingEntry?.createdAt ?? entry.createdAt,
       updatedAt: Date.now(),
     };

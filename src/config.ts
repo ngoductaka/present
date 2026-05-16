@@ -12,13 +12,8 @@ export const APP_CONFIG = {
 
   // Default time settings
   defaults: {
-    startTime: '08:00',
-    endTime: '20:00',
-    interval: 60, // 30 or 60 minutes
+    time: '08:00',
   },
-
-  // Available interval options (in minutes)
-  intervalOptions: [30, 60],
 
   // UI customization
   theme: {
@@ -46,7 +41,6 @@ export const APP_CONFIG = {
 
   // Feature flags
   features: {
-    allowCustomIntervals: false, // Future feature: custom interval input
     allowMultipleTimeRanges: false, // Future feature: multiple time ranges
     showNotificationHistory: false, // Future feature: notification history
   },
@@ -58,8 +52,3 @@ export const getNotificationContent = () => ({
   body: APP_CONFIG.notification.body,
   sound: APP_CONFIG.notification.sound,
 });
-
-// Helper function to validate interval
-export const isValidInterval = (interval: number): boolean => {
-  return APP_CONFIG.intervalOptions.includes(interval);
-};

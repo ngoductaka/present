@@ -1,5 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { MoodEntry, MoodStats, MoodType, MOOD_OPTIONS } from '../types';
+import {
+  MoodEntry,
+  MoodStats,
+  MoodType,
+  MOOD_OPTIONS,
+  normalizeMoodType,
+} from '../types';
 
 const MOOD_ENTRIES_KEY = '@mood_entries';
 
@@ -26,7 +32,21 @@ export const getAllMoodEntries = async (): Promise<MoodEntry[]> => {
   try {
     const data = await AsyncStorage.getItem(MOOD_ENTRIES_KEY);
     console.log('Loaded mood entries:', data);
-    return data ? JSON.parse(data) : [];
+    if (!data) {
+      return [];
+    }
+
+    return (JSON.parse(data) as Array<MoodEntry & { mood: string }>).flatMap(
+      (entry) => {
+        const mood = normalizeMoodType(entry.mood);
+
+        if (!mood) {
+          return [];
+        }
+
+        return [{ ...entry, mood }];
+      }
+    );
   } catch (error) {
     console.error('Error loading mood entries:', error);
     return [];

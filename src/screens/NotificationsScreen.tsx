@@ -13,7 +13,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { TimePicker } from '../components/TimePicker';
-import { IntervalSelector } from '../components/IntervalSelector';
 import { LanguageSwitchButton } from '../components/LanguageSwitchButton';
 import { NotificationSettings } from '../types';
 import { saveSettings, loadSettings } from '../utils/storage';
@@ -30,9 +29,7 @@ export const NotificationsScreen = () => {
     const { t } = useLanguage();
     const headerHeight = useHeaderHeight();
     const [settings, setSettings] = useState<NotificationSettings>({
-        startTime: '08:00',
-        endTime: '20:00',
-        interval: 60,
+        time: '08:00',
         isActive: false,
     });
     const [loading, setLoading] = useState(true);
@@ -62,37 +59,11 @@ export const NotificationsScreen = () => {
         setScheduledCount(count);
     };
 
-    const handleStartTimeChange = (time: string) => {
-        setSettings({ ...settings, startTime: time });
-    };
-
-    const handleEndTimeChange = (time: string) => {
-        setSettings({ ...settings, endTime: time });
-    };
-
-    const handleIntervalChange = (interval: 30 | 60) => {
-        setSettings({ ...settings, interval });
-    };
-
-    const validateTimeRange = (): boolean => {
-        const [startHour, startMin] = settings.startTime.split(':').map(Number);
-        const [endHour, endMin] = settings.endTime.split(':').map(Number);
-        const startMinutes = startHour * 60 + startMin;
-        const endMinutes = endHour * 60 + endMin;
-
-        if (endMinutes <= startMinutes) {
-            Alert.alert(t('alerts.invalidRangeTitle'), t('alerts.invalidRangeMessage'));
-            return false;
-        }
-
-        return true;
+    const handleTimeChange = (time: string) => {
+        setSettings({ ...settings, time });
     };
 
     const handleStart = async () => {
-        if (!validateTimeRange()) {
-            return;
-        }
-
         try {
             setLoading(true);
 
@@ -201,20 +172,9 @@ export const NotificationsScreen = () => {
 
                 <View style={styles.card}>
                     <TimePicker
-                        label={t('notifications.startTime')}
-                        value={settings.startTime}
-                        onChange={handleStartTimeChange}
-                    />
-
-                    <TimePicker
-                        label={t('notifications.endTime')}
-                        value={settings.endTime}
-                        onChange={handleEndTimeChange}
-                    />
-
-                    <IntervalSelector
-                        value={settings.interval}
-                        onChange={handleIntervalChange}
+                        label={t('notifications.time')}
+                        value={settings.time}
+                        onChange={handleTimeChange}
                     />
 
                     {settings.isActive && (

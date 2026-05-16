@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import {
+  Image,
   Modal,
   Pressable,
   ScrollView,
@@ -40,9 +41,14 @@ export const DiarySetupModal = ({
   onWeatherChange,
   onBodyStateToggle,
   onClose,
-  onSkip,
 }: DiarySetupModalProps) => {
   const { t } = useLanguage();
+  const primaryEmotionOptions = DIARY_EMOTION_OPTIONS.filter(
+    (option) => option.id !== 'khong_ro'
+  );
+  const fallbackEmotionOption = DIARY_EMOTION_OPTIONS.find(
+    (option) => option.id === 'khong_ro'
+  );
 
   return (
     <Modal
@@ -51,8 +57,8 @@ export const DiarySetupModal = ({
       visible={visible}
       onRequestClose={onClose}
     >
-      <View style={styles.backdrop}>
-        <View style={styles.sheet}>
+      <Pressable style={styles.backdrop} onPress={onClose}>
+        <Pressable style={styles.sheet} onPress={() => {}}>
           <View style={styles.header}>
             <View>
               <Text style={styles.title}>{t('diary.setupTitle')}</Text>
@@ -73,25 +79,78 @@ export const DiarySetupModal = ({
           >
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>{t('diary.emotionLabel')}</Text>
-              <View style={styles.optionGrid}>
-                {DIARY_EMOTION_OPTIONS.map((option) => {
+              <View style={[styles.optionGrid, styles.emotionGrid]}>
+                {primaryEmotionOptions.map((option) => {
                   const isSelected = emotion === option.id;
                   return (
                     <TouchableOpacity
                       key={option.id}
                       style={[
                         styles.optionCard,
+                        styles.emotionCard,
                         isSelected && styles.optionCardSelected,
                       ]}
                       activeOpacity={0.85}
                       onPress={() => onEmotionChange(option.id)}
                     >
-                      <Text style={styles.optionEmoji}>{option.emoji}</Text>
-                      <Text style={styles.optionText}>{t(option.labelKey)}</Text>
+                      <View
+                        style={[
+                          styles.optionIconWrap,
+                          isSelected && styles.optionIconWrapSelected,
+                        ]}
+                      >
+                        <Image
+                          source={option.image}
+                          style={styles.optionImage}
+                          resizeMode='contain'
+                        />
+                      </View>
+                      <Text
+                        style={[
+                          styles.optionText,
+                          isSelected && styles.optionTextSelected,
+                        ]}
+                      >
+                        {t(option.labelKey)}
+                      </Text>
                     </TouchableOpacity>
                   );
                 })}
               </View>
+              {fallbackEmotionOption ? (
+                <TouchableOpacity
+                  style={[
+                    styles.fallbackEmotionCard,
+                    emotion === fallbackEmotionOption.id &&
+                      styles.fallbackEmotionCardSelected,
+                  ]}
+                  activeOpacity={0.85}
+                  onPress={() => onEmotionChange(fallbackEmotionOption.id)}
+                >
+                  <View
+                    style={[
+                      styles.fallbackEmotionIconWrap,
+                      emotion === fallbackEmotionOption.id &&
+                        styles.fallbackEmotionIconWrapSelected,
+                    ]}
+                  >
+                    <Image
+                      source={fallbackEmotionOption.image}
+                      style={styles.fallbackEmotionImage}
+                      resizeMode='contain'
+                    />
+                  </View>
+                  <Text
+                    style={[
+                      styles.fallbackEmotionText,
+                      emotion === fallbackEmotionOption.id &&
+                        styles.fallbackEmotionTextSelected,
+                    ]}
+                  >
+                    {t(fallbackEmotionOption.labelKey)}
+                  </Text>
+                </TouchableOpacity>
+              ) : null}
             </View>
 
             <View style={styles.section}>
@@ -109,12 +168,26 @@ export const DiarySetupModal = ({
                       activeOpacity={0.85}
                       onPress={() => onWeatherChange(option.id)}
                     >
-                      <Ionicons
-                        name={option.icon as React.ComponentProps<typeof Ionicons>['name']}
-                        size={18}
-                        color={isSelected ? '#1f6f78' : '#57696f'}
-                      />
-                      <Text style={styles.optionText}>{t(option.labelKey)}</Text>
+                      <View
+                        style={[
+                          styles.optionIconWrap,
+                          isSelected && styles.optionIconWrapSelected,
+                        ]}
+                      >
+                        <Ionicons
+                          name={option.icon as React.ComponentProps<typeof Ionicons>['name']}
+                          size={34}
+                          color={isSelected ? '#d45c8f' : '#57696f'}
+                        />
+                      </View>
+                      <Text
+                        style={[
+                          styles.optionText,
+                          isSelected && styles.optionTextSelected,
+                        ]}
+                      >
+                        {t(option.labelKey)}
+                      </Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -135,12 +208,26 @@ export const DiarySetupModal = ({
                       ]}
                       onPress={() => onBodyStateToggle(option.id)}
                     >
-                      <Ionicons
-                        name={option.icon as React.ComponentProps<typeof Ionicons>['name']}
-                        size={18}
-                        color={isSelected ? '#1f6f78' : '#57696f'}
-                      />
-                      <Text style={styles.optionText}>{t(option.labelKey)}</Text>
+                      <View
+                        style={[
+                          styles.optionIconWrap,
+                          isSelected && styles.optionIconWrapSelected,
+                        ]}
+                      >
+                        <Ionicons
+                          name={option.icon as React.ComponentProps<typeof Ionicons>['name']}
+                          size={34}
+                          color={isSelected ? '#d45c8f' : '#57696f'}
+                        />
+                      </View>
+                      <Text
+                        style={[
+                          styles.optionText,
+                          isSelected && styles.optionTextSelected,
+                        ]}
+                      >
+                        {t(option.labelKey)}
+                      </Text>
                     </Pressable>
                   );
                 })}
@@ -150,22 +237,15 @@ export const DiarySetupModal = ({
 
           <View style={styles.footer}>
             <TouchableOpacity
-              style={styles.secondaryButton}
-              onPress={onSkip}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.secondaryButtonText}>{t('diary.skipForNow')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
               style={styles.primaryButton}
               onPress={onClose}
               activeOpacity={0.85}
             >
-              <Text style={styles.primaryButtonText}>{t('diary.startWriting')}</Text>
+              <Text style={styles.primaryButtonText}>{t('common.done')}</Text>
             </TouchableOpacity>
           </View>
-        </View>
-      </View>
+        </Pressable>
+      </Pressable>
     </Modal>
   );
 };
@@ -209,7 +289,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#e8f0ee',
+    backgroundColor: '#f6e8ef',
   },
   content: {
     gap: 20,
@@ -226,56 +306,107 @@ const styles = StyleSheet.create({
   optionGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 6,
+  },
+  emotionGrid: {
+    gap: 2,
   },
   optionCard: {
-    minWidth: '30%',
+    width: '18%',
+    minHeight: 104,
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    gap: 10,
+    borderRadius: 20,
+    backgroundColor: 'transparent',
+    paddingHorizontal: 4,
+    paddingVertical: 6,
+  },
+  emotionCard: {
+    width: '19.2%',
+    minHeight: 98,
+    gap: 6,
+    paddingHorizontal: 2,
+    paddingVertical: 4,
+  },
+  fallbackEmotionCard: {
+    marginTop: 6,
+    alignSelf: 'stretch',
+    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: '#dbe7e5',
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    justifyContent: 'center',
+    gap: 10,
+    borderRadius: 999,
+    backgroundColor: '#f8eef3',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  fallbackEmotionCardSelected: {
+    backgroundColor: '#faf2f6',
   },
   optionCardSelected: {
-    borderColor: '#8dc4bb',
-    backgroundColor: '#eef8f6',
+    backgroundColor: 'transparent',
   },
-  optionEmoji: {
-    fontSize: 18,
+  optionIconWrap: {
+    width: 62,
+    height: 62,
+    borderRadius: 31,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+  },
+  optionIconWrapSelected: {
+    backgroundColor: '#fbeaf1',
+  },
+  optionImage: {
+    width: 50,
+    height: 50,
+  },
+  fallbackEmotionIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+  },
+  fallbackEmotionIconWrapSelected: {
+    backgroundColor: '#f4dbe6',
+  },
+  fallbackEmotionImage: {
+    width: 34,
+    height: 34,
   },
   optionText: {
-    fontSize: 14,
+    fontSize: 10,
     fontWeight: '600',
     color: '#3f5056',
+    textAlign: 'center',
+    lineHeight: 12,
+  },
+  optionTextSelected: {
+    color: '#c24f82',
+    fontWeight: '700',
+  },
+  fallbackEmotionText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#4d6267',
+  },
+  fallbackEmotionTextSelected: {
+    color: '#c24f82',
+    fontWeight: '700',
   },
   footer: {
-    flexDirection: 'row',
-    gap: 12,
     marginTop: 10,
   },
-  secondaryButton: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 18,
-    backgroundColor: '#edf2f1',
-    paddingVertical: 14,
-  },
-  secondaryButtonText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#51656a',
-  },
   primaryButton: {
-    flex: 1.2,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 18,
-    backgroundColor: '#1f6f78',
+    backgroundColor: '#d45c8f',
     paddingVertical: 14,
   },
   primaryButtonText: {

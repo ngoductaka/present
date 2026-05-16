@@ -1,27 +1,31 @@
 export interface NotificationSettings {
-  startTime: string; // HH:mm format
-  endTime: string; // HH:mm format
-  interval: 30 | 60; // minutes
+  time: string; // HH:mm format
   isActive: boolean;
 }
 
 export const DEFAULT_SETTINGS: NotificationSettings = {
-  startTime: '08:00',
-  endTime: '20:00',
-  interval: 60,
+  time: '08:00',
   isActive: false,
 };
 
 // Mood Tracking Types
 export type MoodType =
-  | 'vui_ve'
-  | 'dam_me'
-  | 'to_mo'
-  | 'tu_tin'
-  | 'buon_te'
+  | 'biet_on'
+  | 'buon'
+  | 'cang_thang'
+  | 'chan_nam'
+  | 'co_don'
+  | 'gian_du'
+  | 'hao_hung'
+  | 'khong_ro'
   | 'lo_lang'
-  | 'tri_hoan'
-  | 'met_moi';
+  | 'so_hai'
+  | 'that_vong'
+  | 'thoai_mai'
+  | 'toi_loi'
+  | 'tu_hao'
+  | 'vui_ve'
+  | 'xau_ho';
 
 export interface MoodEntry {
   id: string;
@@ -38,12 +42,7 @@ export interface MoodStats {
   averageMoodScore: number; // 1-5 scale
 }
 
-export type DiaryEmotion =
-  | 'happy'
-  | 'sad'
-  | 'anxious'
-  | 'calm'
-  | 'not_sure';
+export type DiaryEmotion = MoodType;
 
 export type DiaryWeather = 'sunny' | 'cloudy' | 'rainy' | 'stormy';
 
@@ -62,17 +61,105 @@ export interface DiaryEntry {
   updatedAt: number;
 }
 
+const moodAssetMap = {
+  biet_on: require('../assets/icon_mochi/icon_biet_on.png'),
+  buon: require('../assets/icon_mochi/icon_buon.png'),
+  cang_thang: require('../assets/icon_mochi/icon_cang_thang.png'),
+  chan_nam: require('../assets/icon_mochi/icon_chan_nam.png'),
+  co_don: require('../assets/icon_mochi/icon_co_don.png'),
+  gian_du: require('../assets/icon_mochi/icon_gian_du.png'),
+  hao_hung: require('../assets/icon_mochi/icon_hao_hung.png'),
+  khong_ro: require('../assets/icon_mochi/icon_khong_ro.png'),
+  lo_lang: require('../assets/icon_mochi/icon_lo_lang.png'),
+  so_hai: require('../assets/icon_mochi/icon_so_hai.png'),
+  that_vong: require('../assets/icon_mochi/icon_that_vong.png'),
+  thoai_mai: require('../assets/icon_mochi/icon_thoai_mai.png'),
+  toi_loi: require('../assets/icon_mochi/icon_toi_loi.png'),
+  tu_hao: require('../assets/icon_mochi/icon_tu_hao.png'),
+  vui_ve: require('../assets/icon_mochi/icon_vui_ve.png'),
+  xau_ho: require('../assets/icon_mochi/icon_xau_ho.png'),
+} as const;
+
+const legacyMoodTypeMap = {
+  dam_me: 'hao_hung',
+  to_mo: 'khong_ro',
+  tu_tin: 'tu_hao',
+  buon_te: 'chan_nam',
+  tri_hoan: 'khong_ro',
+  met_moi: 'cang_thang',
+} as const;
+
+const legacyDiaryEmotionMap = {
+  happy: 'vui_ve',
+  sad: 'buon',
+  anxious: 'lo_lang',
+  calm: 'thoai_mai',
+  not_sure: 'khong_ro',
+} as const;
+
+const diaryEmotionIds: DiaryEmotion[] = [
+  'vui_ve',
+  'biet_on',
+  'hao_hung',
+  'tu_hao',
+  'thoai_mai',
+  'khong_ro',
+  'lo_lang',
+  'so_hai',
+  'buon',
+  'chan_nam',
+  'co_don',
+  'that_vong',
+  'cang_thang',
+  'gian_du',
+  'toi_loi',
+  'xau_ho',
+];
+
+export const normalizeMoodType = (value?: string | null): MoodType | undefined => {
+  if (!value) {
+    return undefined;
+  }
+
+  if (value in moodAssetMap) {
+    return value as MoodType;
+  }
+
+  if (value in legacyMoodTypeMap) {
+    return legacyMoodTypeMap[value as keyof typeof legacyMoodTypeMap];
+  }
+
+  return undefined;
+};
+
+export const normalizeDiaryEmotion = (
+  value?: string | null
+): DiaryEmotion | undefined => {
+  if (!value) {
+    return undefined;
+  }
+
+  const normalizedMood = normalizeMoodType(value);
+  if (normalizedMood) {
+    return normalizedMood;
+  }
+
+  if (value in legacyDiaryEmotionMap) {
+    return legacyDiaryEmotionMap[value as keyof typeof legacyDiaryEmotionMap];
+  }
+
+  return undefined;
+};
+
 export const DIARY_EMOTION_OPTIONS: Array<{
   id: DiaryEmotion;
-  emoji: string;
+  image: any;
   labelKey: string;
-}> = [
-  { id: 'happy', emoji: '😊', labelKey: 'diary.emotion.happy' },
-  { id: 'sad', emoji: '😔', labelKey: 'diary.emotion.sad' },
-  { id: 'anxious', emoji: '😰', labelKey: 'diary.emotion.anxious' },
-  { id: 'calm', emoji: '😌', labelKey: 'diary.emotion.calm' },
-  { id: 'not_sure', emoji: '🤔', labelKey: 'diary.emotion.notSure' },
-];
+}> = diaryEmotionIds.map((id) => ({
+  id,
+  image: moodAssetMap[id],
+  labelKey: `diary.emotion.${id}`,
+}));
 
 export const DIARY_WEATHER_OPTIONS: Array<{
   id: DiaryWeather;
@@ -105,36 +192,68 @@ export const MOOD_OPTIONS: Array<{
   score: number;
 }> = [
   {
-    type: 'vui_ve', image: require('../assets/moods/joy.png'),
+    type: 'vui_ve', image: moodAssetMap.vui_ve,
     label: 'Vui vẻ', color: '#c59609', bgColor: '#FFF7D9', score: 5,
   },
   {
-    type: 'dam_me', image: require('../assets/moods/dam_me.png'),
-    label: 'Đam mê', color: '#35B56A', bgColor: '#EAF9EF', score: 4,
+    type: 'biet_on', image: moodAssetMap.biet_on,
+    label: 'Biết ơn', color: '#a47a10', bgColor: '#fff4d8', score: 5,
   },
   {
-    type: 'to_mo', image: require('../assets/moods/to_mo.png'),
-    label: 'Tò mò', color: '#8A63D2', bgColor: '#F3ECFF', score: 4,
+    type: 'hao_hung', image: moodAssetMap.hao_hung,
+    label: 'Háo hức', color: '#35B56A', bgColor: '#EAF9EF', score: 5,
   },
   {
-    type: 'tu_tin', image: require('../assets/moods/tu_tin.png'),
-    label: 'Tự tin', color: '#F28AA8', bgColor: '#FFF0F5', score: 5,
+    type: 'tu_hao', image: moodAssetMap.tu_hao,
+    label: 'Tự hào', color: '#F28AA8', bgColor: '#FFF0F5', score: 5,
   },
   {
-    type: 'buon_te', image: require('../assets/moods/buon_te.png'),
-    label: 'Buồn tẻ', color: '#4B8FD9', bgColor: '#EAF3FF', score: 2,
+    type: 'thoai_mai', image: moodAssetMap.thoai_mai,
+    label: 'Thoải mái', color: '#2a9d8f', bgColor: '#e5f7f4', score: 4,
   },
   {
-    type: 'lo_lang', image: require('../assets/moods/lo_lang.png'),
+    type: 'khong_ro', image: moodAssetMap.khong_ro,
+    label: 'Không rõ', color: '#8A63D2', bgColor: '#F3ECFF', score: 3,
+  },
+  {
+    type: 'lo_lang', image: moodAssetMap.lo_lang,
     label: 'Lo lắng', color: '#F29C38', bgColor: '#FFF2E3', score: 2,
   },
   {
-    type: 'tri_hoan', image: require('../assets/moods/tri_hoan.png'),
-    label: 'Trì hoãn', color: '#5F6F86', bgColor: '#EEF1F5', score: 2,
+    type: 'so_hai', image: moodAssetMap.so_hai,
+    label: 'Sợ hãi', color: '#bb7a2b', bgColor: '#fff1e0', score: 1,
   },
   {
-    type: 'met_moi', image: require('../assets/moods/met_moi.png'),
-    label: 'Mệt mỏi', color: '#E4573D', bgColor: '#FDECE8', score: 1,
+    type: 'buon', image: moodAssetMap.buon,
+    label: 'Buồn', color: '#4B8FD9', bgColor: '#EAF3FF', score: 2,
+  },
+  {
+    type: 'chan_nam', image: moodAssetMap.chan_nam,
+    label: 'Chán nản', color: '#6f87c8', bgColor: '#edf3ff', score: 2,
+  },
+  {
+    type: 'co_don', image: moodAssetMap.co_don,
+    label: 'Cô đơn', color: '#6470b8', bgColor: '#eef0ff', score: 1,
+  },
+  {
+    type: 'that_vong', image: moodAssetMap.that_vong,
+    label: 'Thất vọng', color: '#56708f', bgColor: '#ecf1f6', score: 1,
+  },
+  {
+    type: 'cang_thang', image: moodAssetMap.cang_thang,
+    label: 'Căng thẳng', color: '#E4573D', bgColor: '#FDECE8', score: 1,
+  },
+  {
+    type: 'gian_du', image: moodAssetMap.gian_du,
+    label: 'Giận dữ', color: '#d84f42', bgColor: '#fde9e6', score: 1,
+  },
+  {
+    type: 'toi_loi', image: moodAssetMap.toi_loi,
+    label: 'Tội lỗi', color: '#8a6c63', bgColor: '#f5ece8', score: 1,
+  },
+  {
+    type: 'xau_ho', image: moodAssetMap.xau_ho,
+    label: 'Xấu hổ', color: '#c8788f', bgColor: '#fceef2', score: 2,
   },
 ];
 

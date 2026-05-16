@@ -16,7 +16,20 @@ export const loadSettings = async (): Promise<NotificationSettings> => {
   try {
     const data = await AsyncStorage.getItem(STORAGE_KEY);
     if (data) {
-      return JSON.parse(data);
+      const parsed = JSON.parse(data) as
+        | NotificationSettings
+        | {
+            startTime?: string;
+            time?: string;
+            isActive?: boolean;
+          };
+      const legacyStartTime =
+        'startTime' in parsed ? parsed.startTime : undefined;
+
+      return {
+        time: parsed.time ?? legacyStartTime ?? DEFAULT_SETTINGS.time,
+        isActive: parsed.isActive ?? DEFAULT_SETTINGS.isActive,
+      };
     }
     return DEFAULT_SETTINGS;
   } catch (error) {
