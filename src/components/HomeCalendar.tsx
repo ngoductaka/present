@@ -364,7 +364,7 @@ export const HomeCalendar = ({
         }}
         theme={{
           backgroundColor: 'transparent',
-          calendarBackground: 'transparent',
+          calendarBackground: 'rgba(255, 255, 255, 0.5)',
           textSectionTitleColor: '#607d8b',
           monthTextColor: '#263238',
           textMonthFontSize: 20,

@@ -6,7 +6,6 @@ import React from 'react';
 import {
   Alert,
   Image,
-  ImageBackground,
   Keyboard,
   KeyboardAvoidingView,
   Modal,
@@ -58,7 +57,7 @@ const formatDateTitle = (date: string, locale: string) =>
     year: 'numeric',
   }).format(parseDateString(date));
 
-const backgroundImage = require('../../assets/bg1.jpg');
+const backgroundImage = require('../../assets/bg/bg1.jpg');
 
 export const DiaryEntryScreen = ({
   navigation,
@@ -280,25 +279,14 @@ export const DiaryEntryScreen = ({
 
   if (loading) {
     return (
-      <ImageBackground
-        source={backgroundImage}
-        style={styles.container}
-        imageStyle={styles.backgroundImage}
-      >
         <SafeAreaView style={styles.loadingContainer}>
           <StatusBar style='dark' />
           <Text style={styles.loadingText}>{t('diary.loading')}</Text>
         </SafeAreaView>
-      </ImageBackground>
     );
   }
 
   return (
-    <ImageBackground
-      source={backgroundImage}
-      style={styles.container}
-      imageStyle={styles.backgroundImage}
-    >
       <SafeAreaView style={styles.safeArea}>
         <StatusBar style='dark' />
         <DiarySetupModal
@@ -555,7 +543,6 @@ export const DiaryEntryScreen = ({
           ) : null}
         </KeyboardAvoidingView>
       </SafeAreaView>
-    </ImageBackground>
   );
 };
 

@@ -10,7 +10,7 @@ export const AnalyticsScreen = () => {
     const headerHeight = useHeaderHeight();
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={styles.safeArea}>
             <StatusBar style="dark" />
             <View style={[styles.content, { paddingTop: headerHeight + 10 }]}>
                 <MoodAnalytics refreshTrigger={refreshKey} />
@@ -20,9 +20,8 @@ export const AnalyticsScreen = () => {
 };
 
 const styles = StyleSheet.create({
-    container: {
+    safeArea: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
     },
     content: {
         flex: 1,

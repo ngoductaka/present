@@ -1,9 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Image, Animated, Dimensions, Text, Platform } from 'react-native';
-import * as SplashScreen from 'expo-splash-screen';
 import { useLanguage } from '../context/LanguageContext';
 
 const { width, height } = Dimensions.get('window');
+const splashBackgrounds = [
+  require('../../assets/bg/bg1.jpg'),
+  require('../../assets/bg/bg2.jpg'),
+  require('../../assets/bg/bg3.jpg'),
+  require('../../assets/bg/bg4.jpg'),
+  require('../../assets/bg/bg5.jpg'),
+  require('../../assets/bg/bg6.jpg'),
+  require('../../assets/bg/bg7.jpg'),
+];
 
 interface CustomSplashScreenProps {
     onFinish: () => void;
@@ -14,6 +22,9 @@ export const CustomSplashScreen: React.FC<CustomSplashScreenProps> = ({ onFinish
     const [fadeAnim] = useState(new Animated.Value(0));
     const [scaleAnim] = useState(new Animated.Value(0.95));
     const [textFadeAnim] = useState(new Animated.Value(0));
+    const [backgroundImage] = useState(
+      () => splashBackgrounds[Math.floor(Math.random() * splashBackgrounds.length)]
+    );
 
     useEffect(() => {
         // Fade in animation
@@ -58,7 +69,7 @@ export const CustomSplashScreen: React.FC<CustomSplashScreenProps> = ({ onFinish
         }]}>
             {/* Background Image */}
             <Image
-                source={require('../../assets/splash_background.png')}
+                source={backgroundImage}
                 style={styles.backgroundImage}
                 resizeMode="cover"
             />
@@ -66,7 +77,14 @@ export const CustomSplashScreen: React.FC<CustomSplashScreenProps> = ({ onFinish
             {/* Content Overlay */}
             <View style={styles.overlay}>
                 <Animated.View style={[styles.contentContainer, { transform: [{ scale: scaleAnim }] }]}>
-                    <Animated.View style={{ opacity: textFadeAnim, alignItems: 'center', justifyContent: 'center', paddingTop: 200 }}>
+                    <Animated.View
+                        style={[
+                            styles.textPanel,
+                            {
+                                opacity: textFadeAnim,
+                            },
+                        ]}
+                    >
                         <Text style={styles.titleText}>{t('splash.title')}</Text>
                         <Text style={styles.subtitleText}>{t('splash.subtitle')}</Text>
                     </Animated.View>
@@ -96,6 +114,15 @@ const styles = StyleSheet.create({
     contentContainer: {
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    textPanel: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 200,
+        paddingHorizontal: 24,
+        paddingVertical: 20,
+        borderRadius: 28,
+        backgroundColor: 'rgba(26, 16, 22, 0.32)',
     },
     gifStyle: {
         width: 200,

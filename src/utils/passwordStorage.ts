@@ -11,12 +11,26 @@ export const savePassword = async (password: string): Promise<void> => {
   }
 };
 
+export const getPassword = async (): Promise<string | null> => {
+  try {
+    return await AsyncStorage.getItem(PASSWORD_STORAGE_KEY);
+  } catch (error) {
+    console.error('Error loading password:', error);
+    return null;
+  }
+};
+
 export const hasPassword = async (): Promise<boolean> => {
   try {
-    const value = await AsyncStorage.getItem(PASSWORD_STORAGE_KEY);
+    const value = await getPassword();
     return Boolean(value);
   } catch (error) {
     console.error('Error loading password status:', error);
     return false;
   }
+};
+
+export const verifyPassword = async (input: string): Promise<boolean> => {
+  const savedPassword = await getPassword();
+  return Boolean(savedPassword) && savedPassword === input;
 };

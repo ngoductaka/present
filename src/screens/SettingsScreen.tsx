@@ -63,25 +63,34 @@ export const SettingsScreen = ({ navigation }: SettingsScreenProps) => {
   const handleSaveNotifications = async () => {
     try {
       setSavingNotifications(true);
-      const nextSettings = { ...settings };
+      const nextSettings = {
+        ...settings,
+        isActive: true,
+      };
+      const hasPermissionValue = await requestPermissions();
 
-      if (nextSettings.isActive) {
-        const hasPermissionValue = await requestPermissions();
-
-        if (!hasPermissionValue) {
-          Alert.alert(t('alerts.permissionTitle'), t('alerts.permissionMessage'));
-          return;
-        }
-
-        await cancelAllNotifications();
-        await scheduleNotifications(nextSettings, {
-          title: t('notifications.reminderTitle'),
-          body: t('notifications.reminderBody'),
+      if (!hasPermissionValue) {
+        await saveSettings({
+          ...settings,
+          isActive: false,
         });
+        setSettings((current) => ({
+          ...current,
+          isActive: false,
+        }));
+        Alert.alert(t('alerts.permissionTitle'), t('alerts.permissionMessage'));
+        return;
       }
 
+      await cancelAllNotifications();
+      await scheduleNotifications(nextSettings, {
+        title: t('notifications.reminderTitle'),
+        body: t('notifications.reminderBody'),
+      });
+
       await saveSettings(nextSettings);
-      Alert.alert(t('alerts.successTitle'), t('notifications.infoSaved'));
+      setSettings(nextSettings);
+      Alert.alert(t('alerts.successTitle'), t('alerts.scheduledSuccess'));
     } catch (error) {
       console.error('Error saving notification settings:', error);
       Alert.alert(t('alerts.errorTitle'), t('alerts.scheduleFailed'));
@@ -234,6 +243,9 @@ export const SettingsScreen = ({ navigation }: SettingsScreenProps) => {
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   safeArea: {
     flex: 1,
   },
@@ -269,9 +281,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  container: {
-    flex: 1,
   },
   contentContainer: {
     paddingHorizontal: 16,

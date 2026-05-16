@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { ImageBackground, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,8 +15,6 @@ import {
 } from '../services/diaryService';
 import { getLatestMoodByDate } from '../services/moodService';
 import { DiaryEmotion, MoodType } from '../types';
-
-const backgroundImage = require('../../assets/bg1.jpg');
 
 type LogMoodScreenProps = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
@@ -62,47 +60,35 @@ export const LogMoodScreen = ({ navigation }: LogMoodScreenProps) => {
   );
 
   return (
-    <ImageBackground
-      source={backgroundImage}
-      style={styles.container}
-      imageStyle={styles.backgroundImage}
-    >
-      <SafeAreaView style={styles.safeArea}>
-        <StatusBar style="dark" />
-        <View style={styles.header}>
-          <Text style={styles.title}>{t('logMood.title')}</Text>
-          <TouchableOpacity
-            style={styles.settingsButton}
-            onPress={() => navigation.navigate('Settings')}
-            activeOpacity={0.85}
-          >
-            <Ionicons name="settings-outline" size={20} color="#d45c8f" />
-          </TouchableOpacity>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar style="dark" />
+      <View style={styles.header}>
+        <Text style={styles.title}>{t('logMood.title')}</Text>
+        <TouchableOpacity
+          style={styles.settingsButton}
+          onPress={() => navigation.navigate('Settings')}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="settings-outline" size={20} color="#d45c8f" />
+        </TouchableOpacity>
+      </View>
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.calendarWrap}>
+          <HomeCalendar
+            locale={locale}
+            entryDates={entryDates}
+            moodByDate={moodByDate}
+            emotionByDate={emotionByDate}
+            diaryImagesByDate={diaryImagesByDate}
+            onDatePress={(date) => navigation.navigate('DiaryEntry', { date })}
+          />
         </View>
-        <ScrollView contentContainerStyle={styles.content}>
-          <View style={styles.calendarWrap}>
-            <HomeCalendar
-              locale={locale}
-              entryDates={entryDates}
-              moodByDate={moodByDate}
-              emotionByDate={emotionByDate}
-              diaryImagesByDate={diaryImagesByDate}
-              onDatePress={(date) => navigation.navigate('DiaryEntry', { date })}
-            />
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    </ImageBackground>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  backgroundImage: {
-    resizeMode: 'cover',
-  },
   safeArea: {
     flex: 1,
     position: 'relative',

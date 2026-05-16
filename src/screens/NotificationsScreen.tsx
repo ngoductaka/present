@@ -145,7 +145,7 @@ export const NotificationsScreen = () => {
     if (loading && scheduledCount === 0) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#007AFF" />
+                <ActivityIndicator size="large" color="#d45c8f" />
             </View>
         );
     }
@@ -266,13 +266,11 @@ export const NotificationsScreen = () => {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#f5f5f5',
     },
     container: {
         flex: 1,
