@@ -6,6 +6,7 @@ import {
   MOOD_OPTIONS,
   normalizeMoodType,
 } from '../types';
+import { toLocalDateKey } from '../utils/date';
 
 const MOOD_ENTRIES_KEY = '@mood_entries';
 
@@ -176,7 +177,7 @@ export const getMoodEntriesByDate = async (): Promise<
 
     entries.forEach((entry) => {
       const date = new Date(entry.timestamp);
-      const dateKey = date.toISOString().split('T')[0]; // YYYY-MM-DD
+      const dateKey = toLocalDateKey(date);
 
       if (!grouped[dateKey]) {
         grouped[dateKey] = [];
@@ -197,7 +198,7 @@ export const getLatestMoodByDate = async (): Promise<Record<string, MoodType>> =
     const latestMoodByDate: Record<string, MoodType> = {};
 
     entries.forEach((entry) => {
-      const dateKey = new Date(entry.timestamp).toISOString().split('T')[0];
+      const dateKey = toLocalDateKey(new Date(entry.timestamp));
 
       if (!latestMoodByDate[dateKey]) {
         latestMoodByDate[dateKey] = entry.mood;

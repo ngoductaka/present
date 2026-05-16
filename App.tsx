@@ -14,6 +14,7 @@ import { AppLockScreen } from './src/components/AppLockScreen';
 import { CustomSplashScreen } from './src/components/CustomSplashScreen';
 import { LanguageProvider, useLanguage } from './src/context/LanguageContext';
 import { RootStackParamList } from './src/navigation/types';
+import { shouldSkipLockOnActive } from './src/utils/appLockState';
 import { hasPassword, verifyPassword } from './src/utils/passwordStorage';
 
 // Keep the splash screen visible while we fetch resources
@@ -114,6 +115,10 @@ const AppContent = () => {
         previousState.match(/inactive|background/) &&
         nextState === 'active'
       ) {
+        if (shouldSkipLockOnActive()) {
+          return;
+        }
+
         const enabled = await hasPassword();
         setPasswordEnabled(enabled);
 

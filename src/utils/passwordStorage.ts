@@ -11,6 +11,15 @@ export const savePassword = async (password: string): Promise<void> => {
   }
 };
 
+export const removePassword = async (): Promise<void> => {
+  try {
+    await AsyncStorage.removeItem(PASSWORD_STORAGE_KEY);
+  } catch (error) {
+    console.error('Error removing password:', error);
+    throw error;
+  }
+};
+
 export const getPassword = async (): Promise<string | null> => {
   try {
     return await AsyncStorage.getItem(PASSWORD_STORAGE_KEY);

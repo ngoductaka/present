@@ -21,7 +21,7 @@ import { TimePicker } from '../components/TimePicker';
 import { NotificationSettings } from '../types';
 import { RootStackParamList } from '../navigation/types';
 import { loadSettings, saveSettings } from '../utils/storage';
-import { hasPassword, savePassword } from '../utils/passwordStorage';
+import { hasPassword, removePassword, savePassword } from '../utils/passwordStorage';
 import {
   cancelAllNotifications,
   requestPermissions,
@@ -123,6 +123,40 @@ export const SettingsScreen = ({ navigation }: SettingsScreenProps) => {
     } finally {
       setSavingPassword(false);
     }
+  };
+
+  const handleDisablePassword = () => {
+    Alert.alert(
+      t('settings.disablePasswordTitle'),
+      t('settings.disablePasswordMessage'),
+      [
+        {
+          text: t('common.cancel'),
+          style: 'cancel',
+        },
+        {
+          text: t('settings.disablePassword'),
+          style: 'destructive',
+          onPress: () => {
+            void (async () => {
+              try {
+                setSavingPassword(true);
+                await removePassword();
+                setPasswordSet(false);
+                setPassword('');
+                setConfirmPassword('');
+                Alert.alert(t('alerts.successTitle'), t('settings.passwordDisabled'));
+              } catch (error) {
+                console.error('Error disabling password:', error);
+                Alert.alert(t('alerts.errorTitle'), t('alerts.saveFailed'));
+              } finally {
+                setSavingPassword(false);
+              }
+            })();
+          },
+        },
+      ]
+    );
   };
 
   if (loading) {
@@ -235,6 +269,18 @@ export const SettingsScreen = ({ navigation }: SettingsScreenProps) => {
               <Text style={styles.primaryButtonText}>{t('settings.savePassword')}</Text>
             )}
           </TouchableOpacity>
+          {passwordSet ? (
+            <TouchableOpacity
+              style={styles.secondaryButton}
+              onPress={handleDisablePassword}
+              activeOpacity={0.85}
+              disabled={savingPassword}
+            >
+              <Text style={styles.secondaryButtonText}>
+                {t('settings.disablePassword')}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -348,5 +394,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: '#ffffff',
+  },
+  secondaryButton: {
+    minHeight: 48,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f8e7ee',
+    paddingHorizontal: 16,
+    marginTop: 10,
+  },
+  secondaryButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#b85b83',
   },
 });

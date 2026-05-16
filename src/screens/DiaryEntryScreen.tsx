@@ -38,6 +38,7 @@ import {
   DiaryBodyState,
   DiaryEntry,
 } from '../types';
+import { beginExternalAppFlow, endExternalAppFlow } from '../utils/appLockState';
 
 type DiaryEntryScreenProps = NativeStackScreenProps<
   RootStackParamList,
@@ -223,6 +224,8 @@ export const DiaryEntryScreen = ({
   };
 
   const handleImagePick = async (source: 'library' | 'camera') => {
+    beginExternalAppFlow();
+
     try {
       if (source === 'library') {
         const permission =
@@ -251,6 +254,8 @@ export const DiaryEntryScreen = ({
       appendImage(persistedUri);
     } catch (error) {
       Alert.alert(t('alerts.errorTitle'), t('diary.imageSaveFailed'));
+    } finally {
+      endExternalAppFlow();
     }
   };
 

@@ -9,6 +9,7 @@ import {
   MoodType,
   MOOD_OPTIONS,
 } from '../types';
+import { toLocalDateKey } from '../utils/date';
 
 const MIN_MOOD_SCORE = 1;
 const MAX_MOOD_SCORE = 5;
@@ -28,20 +29,24 @@ type HomeCalendarProps = {
 const getLocaleConfig = (locale: string) => {
   const referenceDate = new Date(Date.UTC(2024, 0, 7));
   const monthNames = Array.from({ length: 12 }, (_, index) =>
-    new Intl.DateTimeFormat(locale, { month: 'long' }).format(new Date(2024, index, 1))
+    new Intl.DateTimeFormat(locale, { month: 'long' }).format(
+      new Date(2024, index, 1),
+    ),
   );
   const monthNamesShort = Array.from({ length: 12 }, (_, index) =>
-    new Intl.DateTimeFormat(locale, { month: 'short' }).format(new Date(2024, index, 1))
+    new Intl.DateTimeFormat(locale, { month: 'short' }).format(
+      new Date(2024, index, 1),
+    ),
   );
   const dayNames = Array.from({ length: 7 }, (_, index) =>
     new Intl.DateTimeFormat(locale, { weekday: 'long' }).format(
-      new Date(referenceDate.getTime() + index * 24 * 60 * 60 * 1000)
-    )
+      new Date(referenceDate.getTime() + index * 24 * 60 * 60 * 1000),
+    ),
   );
   const dayNamesShort = Array.from({ length: 7 }, (_, index) =>
     new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(
-      new Date(referenceDate.getTime() + index * 24 * 60 * 60 * 1000)
-    )
+      new Date(referenceDate.getTime() + index * 24 * 60 * 60 * 1000),
+    ),
   );
 
   return {
@@ -49,11 +54,12 @@ const getLocaleConfig = (locale: string) => {
     monthNamesShort,
     dayNames,
     dayNamesShort,
-    today: new Intl.DateTimeFormat(locale, { weekday: 'long' }).format(new Date()),
+    today: new Intl.DateTimeFormat(locale, { weekday: 'long' }).format(
+      new Date(),
+    ),
   };
 };
 
-const toDateString = (date: Date) => date.toISOString().slice(0, 10);
 const getTrendPointColor = (score: number) => {
   if (score >= 4) {
     return '#e97ca8';
@@ -76,9 +82,11 @@ export const HomeCalendar = ({
 }: HomeCalendarProps) => {
   const { t } = useLanguage();
   const today = React.useMemo(() => new Date(), []);
-  const todayString = React.useMemo(() => toDateString(today), [today]);
+  const todayString = React.useMemo(() => toLocalDateKey(today), [today]);
   const [selectedDate, setSelectedDate] = React.useState(todayString);
-  const [visibleMonthKey, setVisibleMonthKey] = React.useState(todayString.slice(0, 7));
+  const [visibleMonthKey, setVisibleMonthKey] = React.useState(
+    todayString.slice(0, 7),
+  );
   const [trendChartWidth, setTrendChartWidth] = React.useState(0);
   const daysInSelectedMonth = React.useMemo(() => {
     const [year, month] = visibleMonthKey.split('-').map(Number);
@@ -100,7 +108,7 @@ export const HomeCalendar = ({
         month: 'short',
         day: 'numeric',
       }).format(new Date(`${selectedDate}T00:00:00`)),
-    [locale, selectedDate]
+    [locale, selectedDate],
   );
   const selectedMonthLabel = React.useMemo(
     () =>
@@ -108,7 +116,7 @@ export const HomeCalendar = ({
         month: 'long',
         year: 'numeric',
       }).format(new Date(`${visibleMonthKey}-01T00:00:00`)),
-    [locale, visibleMonthKey]
+    [locale, visibleMonthKey],
   );
   const monthlyEmotionStats = React.useMemo(() => {
     const counts = new Map<DiaryEmotion, number>();
@@ -132,8 +140,12 @@ export const HomeCalendar = ({
 
     return Array.from(counts.entries())
       .map(([emotionId, count]) => {
-        const moodOption = MOOD_OPTIONS.find((option) => option.type === emotionId);
-        const diaryOption = DIARY_EMOTION_OPTIONS.find((option) => option.id === emotionId);
+        const moodOption = MOOD_OPTIONS.find(
+          (option) => option.type === emotionId,
+        );
+        const diaryOption = DIARY_EMOTION_OPTIONS.find(
+          (option) => option.id === emotionId,
+        );
 
         if (!moodOption && !diaryOption) {
           return null;
@@ -143,7 +155,9 @@ export const HomeCalendar = ({
           id: emotionId,
           count,
           image: moodOption?.image ?? diaryOption?.image,
-          label: moodOption ? t(`mood.${moodOption.type}`) : t(diaryOption!.labelKey),
+          label: moodOption
+            ? t(`mood.${moodOption.type}`)
+            : t(diaryOption!.labelKey),
         };
       })
       .filter((item): item is NonNullable<typeof item> => Boolean(item))
@@ -152,7 +166,9 @@ export const HomeCalendar = ({
   }, [emotionByDate, moodByDate, t, visibleMonthKey]);
   const maxMonthlyEmotionCount = monthlyEmotionStats[0]?.count ?? 0;
   const monthlyBalance = React.useMemo(() => {
-    const scoreByMood = new Map(MOOD_OPTIONS.map((option) => [option.type, option.score]));
+    const scoreByMood = new Map(
+      MOOD_OPTIONS.map((option) => [option.type, option.score]),
+    );
     let good = 0;
     let neutral = 0;
     let bad = 0;
@@ -194,7 +210,9 @@ export const HomeCalendar = ({
     };
   }, [emotionByDate, moodByDate, visibleMonthKey]);
   const monthlyTrendPoints = React.useMemo(() => {
-    const scoreByMood = new Map(MOOD_OPTIONS.map((option) => [option.type, option.score]));
+    const scoreByMood = new Map(
+      MOOD_OPTIONS.map((option) => [option.type, option.score]),
+    );
     const xRange = Math.max(trendChartWidth - TREND_POINT_SIZE, 0);
 
     return Array.from({ length: daysInSelectedMonth }, (_, index) => {
@@ -212,7 +230,9 @@ export const HomeCalendar = ({
       }
 
       const x =
-        daysInSelectedMonth === 1 ? xRange / 2 : (index / (daysInSelectedMonth - 1)) * xRange;
+        daysInSelectedMonth === 1
+          ? xRange / 2
+          : (index / (daysInSelectedMonth - 1)) * xRange;
       const normalizedScore =
         (MAX_MOOD_SCORE - score) / (MAX_MOOD_SCORE - MIN_MOOD_SCORE);
       const y = 12 + normalizedScore * TREND_DRAWABLE_HEIGHT;
@@ -226,7 +246,13 @@ export const HomeCalendar = ({
         color: getTrendPointColor(score),
       };
     }).filter((item): item is NonNullable<typeof item> => Boolean(item));
-  }, [daysInSelectedMonth, emotionByDate, moodByDate, trendChartWidth, visibleMonthKey]);
+  }, [
+    daysInSelectedMonth,
+    emotionByDate,
+    moodByDate,
+    trendChartWidth,
+    visibleMonthKey,
+  ]);
   const monthlyTrendSegments = React.useMemo(
     () =>
       monthlyTrendPoints.slice(0, -1).map((point, index) => {
@@ -250,7 +276,7 @@ export const HomeCalendar = ({
           angle,
         };
       }),
-    [monthlyTrendPoints]
+    [monthlyTrendPoints],
   );
 
   const handleDayPress = React.useCallback(
@@ -268,7 +294,7 @@ export const HomeCalendar = ({
 
       onDatePress?.(dateString);
     },
-    [diaryImagesByDate, emotionByDate, moodByDate, onDatePress]
+    [diaryImagesByDate, emotionByDate, moodByDate, onDatePress],
   );
 
   const handleDetailPress = React.useCallback(() => {
@@ -289,7 +315,7 @@ export const HomeCalendar = ({
         onDayPress={(day) => handleDayPress(day.dateString)}
         onMonthChange={(month) => {
           setVisibleMonthKey(
-            `${month.year}-${String(month.month).padStart(2, '0')}`
+            `${month.year}-${String(month.month).padStart(2, '0')}`,
           );
         }}
         maxDate={todayString}
@@ -335,7 +361,6 @@ export const HomeCalendar = ({
               disabled={isDisabled}
               activeOpacity={0.85}
             >
-              
               <Text
                 style={[
                   styles.dayText,
@@ -350,13 +375,13 @@ export const HomeCalendar = ({
                 <Image
                   source={moodOption.image}
                   style={styles.moodBadge}
-                  resizeMode="contain"
+                  resizeMode='contain'
                 />
               ) : diaryEmotionOption ? (
                 <Image
                   source={diaryEmotionOption.image}
                   style={styles.emotionBadge}
-                  resizeMode="contain"
+                  resizeMode='contain'
                 />
               ) : null}
             </TouchableOpacity>
@@ -381,7 +406,9 @@ export const HomeCalendar = ({
           textDayHeaderFontWeight: '700',
         }}
       />
-      {selectedMoodOption || selectedEmotionOption || selectedImages.length > 0 ? (
+      {selectedMoodOption ||
+      selectedEmotionOption ||
+      selectedImages.length > 0 ? (
         <TouchableOpacity
           style={styles.detailCard}
           onPress={handleDetailPress}
@@ -390,7 +417,7 @@ export const HomeCalendar = ({
           <View style={styles.detailHeader}>
             <Text style={styles.detailDate}>{selectedDateLabel}</Text>
             <View style={styles.editIconWrap}>
-              <Ionicons name="create-outline" size={18} color="#d45c8f" />
+              <Ionicons name='create-outline' size={18} color='#d45c8f' />
             </View>
           </View>
           {selectedMoodOption || selectedEmotionOption ? (
@@ -399,13 +426,13 @@ export const HomeCalendar = ({
                 <Image
                   source={selectedMoodOption.image}
                   style={styles.detailMoodImage}
-                  resizeMode="contain"
+                  resizeMode='contain'
                 />
               ) : (
                 <Image
                   source={selectedEmotionOption?.image}
                   style={styles.detailEmotionImage}
-                  resizeMode="contain"
+                  resizeMode='contain'
                 />
               )}
               <Text style={styles.detailText}>
@@ -432,9 +459,19 @@ export const HomeCalendar = ({
       ) : null}
       {monthlyEmotionStats.length > 0 ? (
         <View style={styles.chartCard}>
-          <Text style={styles.chartEyebrow}>{selectedMonthLabel}</Text>
-          <Text style={styles.chartTitle}>{t('logMood.monthlyEmotionTitle')}</Text>
-          <Text style={styles.chartSubtitle}>{t('logMood.monthlyEmotionSubtitle')}</Text>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: 8,
+            }}
+          >
+            <Text style={styles.chartTitle}>
+              {t('logMood.monthlyEmotionSubtitle')}
+            </Text>
+            <Text style={styles.chartEyebrow}>{selectedMonthLabel}</Text>
+          </View>
           <View style={styles.chartList}>
             {monthlyEmotionStats.map((item) => (
               <View key={item.id} style={styles.chartRow}>
@@ -442,7 +479,7 @@ export const HomeCalendar = ({
                   <Image
                     source={item.image}
                     style={styles.chartEmotionImage}
-                    resizeMode="contain"
+                    resizeMode='contain'
                   />
                   <Text style={styles.chartLabel} numberOfLines={1}>
                     {item.label}
@@ -455,7 +492,9 @@ export const HomeCalendar = ({
                       {
                         width: `${Math.max(
                           16,
-                          Math.round((item.count / maxMonthlyEmotionCount) * 100)
+                          Math.round(
+                            (item.count / maxMonthlyEmotionCount) * 100,
+                          ),
                         )}%`,
                       },
                     ]}
@@ -469,15 +508,25 @@ export const HomeCalendar = ({
       ) : null}
       {monthlyBalance.total > 0 ? (
         <View style={styles.chartCard}>
-          <Text style={styles.chartEyebrow}>{selectedMonthLabel}</Text>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: 8,
+            }}
+          >
           <Text style={styles.chartTitle}>{t('logMood.balanceTitle')}</Text>
-          <Text style={styles.chartSubtitle}>{t('logMood.balanceSubtitle')}</Text>
+          <Text style={styles.chartEyebrow}>{selectedMonthLabel}</Text>
+          </View>
           <View style={styles.balanceSummaryRow}>
             <View style={styles.balanceSummaryItem}>
               <Text style={[styles.balancePercent, styles.balancePercentGood]}>
                 {monthlyBalance.goodPercent}%
               </Text>
-              <Text style={styles.balanceLabel}>{t('logMood.balanceGood')}</Text>
+              <Text style={styles.balanceLabel}>
+                {t('logMood.balanceGood')}
+              </Text>
             </View>
             <View style={styles.balanceSummaryItem}>
               <Text style={[styles.balancePercent, styles.balancePercentBad]}>
@@ -500,29 +549,33 @@ export const HomeCalendar = ({
               ]}
             />
             <View
-              style={[
-                styles.balanceBarBad,
-                { flex: monthlyBalance.bad || 0 },
-              ]}
+              style={[styles.balanceBarBad, { flex: monthlyBalance.bad || 0 }]}
             />
           </View>
           <View style={styles.balanceLegend}>
             <View style={styles.balanceLegendItem}>
-              <View style={[styles.balanceLegendDot, styles.balanceLegendDotGood]} />
+              <View
+                style={[styles.balanceLegendDot, styles.balanceLegendDotGood]}
+              />
               <Text style={styles.balanceLegendText}>
                 {t('logMood.balanceGood')} {monthlyBalance.good}
               </Text>
             </View>
             <View style={styles.balanceLegendItem}>
               <View
-                style={[styles.balanceLegendDot, styles.balanceLegendDotNeutral]}
+                style={[
+                  styles.balanceLegendDot,
+                  styles.balanceLegendDotNeutral,
+                ]}
               />
               <Text style={styles.balanceLegendText}>
                 {t('logMood.balanceNeutral')} {monthlyBalance.neutral}
               </Text>
             </View>
             <View style={styles.balanceLegendItem}>
-              <View style={[styles.balanceLegendDot, styles.balanceLegendDotBad]} />
+              <View
+                style={[styles.balanceLegendDot, styles.balanceLegendDotBad]}
+              />
               <Text style={styles.balanceLegendText}>
                 {t('logMood.balanceBad')} {monthlyBalance.bad}
               </Text>
@@ -532,21 +585,43 @@ export const HomeCalendar = ({
       ) : null}
       {monthlyTrendPoints.length > 0 ? (
         <View style={styles.chartCard}>
-          <Text style={styles.chartEyebrow}>{selectedMonthLabel}</Text>
+
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: 8,
+            }}
+          >
           <Text style={styles.chartTitle}>{t('logMood.moodFlowTitle')}</Text>
-          <Text style={styles.chartSubtitle}>{t('logMood.moodFlowSubtitle')}</Text>
+          <Text style={styles.chartEyebrow}>{selectedMonthLabel}</Text>
+          </View>
+          {/* <Text style={styles.chartSubtitle}>
+            {t('logMood.moodFlowSubtitle')}
+          </Text> */}
           <View style={styles.trendCardInner}>
-            <View style={styles.trendAxisLabels}>
-              <Text style={styles.trendAxisLabel}>{t('logMood.moodFlowHigh')}</Text>
-              <Text style={styles.trendAxisLabel}>{t('logMood.moodFlowLow')}</Text>
-            </View>
+            {/* <View style={styles.trendAxisLabels}>
+              <Text style={styles.trendAxisLabel}>
+                {t('logMood.moodFlowHigh')}
+              </Text>
+              <Text style={styles.trendAxisLabel}>
+                {t('logMood.moodFlowLow')}
+              </Text>
+            </View> */}
             <View
               style={styles.trendChart}
-              onLayout={(event) => setTrendChartWidth(event.nativeEvent.layout.width)}
+              onLayout={(event) =>
+                setTrendChartWidth(event.nativeEvent.layout.width)
+              }
             >
               <View style={[styles.trendGuideLine, styles.trendGuideLineTop]} />
-              <View style={[styles.trendGuideLine, styles.trendGuideLineMiddle]} />
-              <View style={[styles.trendGuideLine, styles.trendGuideLineBottom]} />
+              <View
+                style={[styles.trendGuideLine, styles.trendGuideLineMiddle]}
+              />
+              <View
+                style={[styles.trendGuideLine, styles.trendGuideLineBottom]}
+              />
               {trendChartWidth > 0
                 ? monthlyTrendSegments.map((segment) => (
                     <View
@@ -626,7 +701,7 @@ const styles = StyleSheet.create({
   dayTextWithMood: {
     position: 'absolute',
     bottom: 0,
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '700',
   },
   todayDayText: {
@@ -638,17 +713,17 @@ const styles = StyleSheet.create({
   },
   moodBadge: {
     position: 'absolute',
-    top: 0,
+    top: -5,
     alignSelf: 'center',
-    width: 38,
-    height: 38,
+    width: 41,
+    height: 41,
   },
   emotionBadge: {
     position: 'absolute',
-    top: 0,
+    top: -5,
     alignSelf: 'center',
-    width: 38,
-    height: 38,
+    width: 41,
+    height: 41,
   },
   detailCard: {
     marginTop: 14,

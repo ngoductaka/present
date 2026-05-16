@@ -19,6 +19,7 @@ import { RootStackParamList } from '../navigation/types';
 import { getDiaryEmotionByDate } from '../services/diaryService';
 import { getLatestMoodByDate } from '../services/moodService';
 import { DIARY_EMOTION_OPTIONS, DiaryEmotion, MoodType, MOOD_OPTIONS } from '../types';
+import { toLocalMonthKey } from '../utils/date';
 
 const backgroundImage = require('../../assets/bg1.jpg');
 const MIN_MOOD_SCORE = 1;
@@ -28,8 +29,6 @@ const TREND_DRAWABLE_HEIGHT = 64;
 const TREND_POINT_SIZE = 10;
 
 type ChartsScreenProps = NativeStackScreenProps<RootStackParamList, 'Charts'>;
-
-const toMonthKey = (date: Date) => date.toISOString().slice(0, 7);
 
 const getTrendPointColor = (score: number) => {
   if (score >= 4) {
@@ -46,7 +45,7 @@ const getTrendPointColor = (score: number) => {
 export const ChartsScreen = ({ navigation }: ChartsScreenProps) => {
   const { t, locale } = useLanguage();
   const today = React.useMemo(() => new Date(), []);
-  const currentMonthKey = React.useMemo(() => toMonthKey(today), [today]);
+  const currentMonthKey = React.useMemo(() => toLocalMonthKey(today), [today]);
   const [visibleMonthKey, setVisibleMonthKey] = React.useState(currentMonthKey);
   const [loading, setLoading] = React.useState(true);
   const [trendChartWidth, setTrendChartWidth] = React.useState(0);
@@ -243,7 +242,7 @@ export const ChartsScreen = ({ navigation }: ChartsScreenProps) => {
   const stepMonth = (direction: -1 | 1) => {
     const [year, month] = visibleMonthKey.split('-').map(Number);
     const nextDate = new Date(year, month - 1 + direction, 1);
-    const nextKey = toMonthKey(nextDate);
+    const nextKey = toLocalMonthKey(nextDate);
 
     if (nextKey > currentMonthKey) {
       return;
