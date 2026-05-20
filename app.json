@@ -4,13 +4,13 @@
     "slug": "present",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/private-diary-icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/private-diary-splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#f9eee3"
     },
     "ios": {
       "supportsTablet": true,
@@ -33,15 +33,14 @@
         "POST_NOTIFICATIONS"
       ],
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon.png",
-        "monochromeImage": "./assets/icon.png",
-        "backgroundColor": "#f3b7cb"
+        "foregroundImage": "./assets/private-diary-adaptive-icon.png",
+        "backgroundColor": "#f9eee3"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/icon.png"
+      "favicon": "./assets/private-diary-favicon.png"
     },
     "plugins": [
       "@react-native-community/datetimepicker"

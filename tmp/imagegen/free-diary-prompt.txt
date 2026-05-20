@@ -1,0 +1,12 @@
+Design a premium mobile app icon for a free-form journaling and mood diary app named "Present".
+
+Create a soft, minimal journal symbol as the main icon: a rounded diary or notebook with gentle organic curves, slightly open or layered to suggest free expression and personal writing. At the center of the cover or pages, include a subtle emotional motif such as a small glowing dot, soft petal, or abstract heart-like shape to represent feelings, reflection, and inner life.
+
+Style: clean app icon, minimal, emotionally warm, calm, elegant, modern, highly recognizable at small size.
+Composition: one centered notebook symbol, bold silhouette, simple geometry with soft corners, no tiny details, no realistic paper texture, no handwriting, no photorealism, no mockup.
+Visual language: free journaling, emotional clarity, softness, privacy, healing, everyday reflection.
+Color palette: blush pink, warm cream, pale peach, muted mint accents, soft teal shadows. Refined gradient lighting, subtle and premium.
+Background: simple light background or smooth warm gradient with clear separation from the main symbol.
+Brand feeling: intimate, thoughtful, safe, expressive, premium but approachable.
+Do not include text, letters, logos, phone frames, pencils, extra objects, busy decoration, or strong 3D realism.
+Output: a polished standalone mobile app icon concept for a mood journaling app, centered, minimal, warm, memorable, and suitable for iOS and Android.

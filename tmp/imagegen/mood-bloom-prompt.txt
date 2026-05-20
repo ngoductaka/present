@@ -1,0 +1,12 @@
+Design a premium mobile app icon for a mood diary and emotional wellness app named "Present".
+
+Create an abstract "mood bloom" symbol: a soft circular core in the center with 3 to 5 large rounded petals blooming outward, representing emotional awareness, healing, calm, and inner growth. The mark should feel gentle, modern, minimal, and emotionally warm.
+
+Style: clean app icon, geometric but organic, soft edges, balanced symmetry, simple bold shapes, no thin lines, no tiny details, no photorealism, no 3D object rendering, no busy decoration.
+Composition: single centered symbol, strong silhouette, readable at very small size, optimized for iOS and Android home screens.
+Color palette: soft mint, pale teal, warm cream, blush pink, subtle peach highlights. Use a calm luminous gradient, refined and not candy-like.
+Background: simple soft light background or smooth gradient background with high contrast against the symbol.
+Mood: calm, healing, reflective, emotionally safe, elegant, contemporary.
+Brand feeling: mindfulness meets mood journaling, soft but not childish, premium but approachable.
+Do not include text, letters, words, mockup frames, phone devices, shadows outside the icon, or extra objects.
+Output: a polished standalone app icon concept, centered, minimal, memorable, visually distinct, high-end wellness product aesthetic.

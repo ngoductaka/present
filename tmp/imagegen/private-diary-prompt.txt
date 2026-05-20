@@ -1,0 +1,15 @@
+Design a premium mobile app icon for a private mood diary and personal journaling app named "Present".
+
+Create a soft, minimal notebook or diary symbol as the main icon, with rounded corners and a clean, elegant silhouette. Integrate a subtle privacy element into the diary, such as a small lock, keyhole, clasp, or secure band, to communicate personal space, emotional safety, and confidentiality.
+
+The icon should feel intimate, calm, personal, and protected, not corporate or technical. It should suggest a private journal where sensitive thoughts and feelings are safely kept.
+
+Style: minimal mobile app icon, soft geometry, emotionally warm, elegant, modern, highly recognizable at small size.
+Composition: one centered diary symbol, bold silhouette, simple shapes, no tiny details, no realistic texture, no handwriting, no photorealism, no mockup.
+Visual language: privacy, emotional safety, self-reflection, trust, personal space, gentle protection.
+Color palette: warm cream, blush pink, muted peach, soft rose, pale sage or teal accents. Use subtle premium gradients with clear contrast.
+Background: simple light background or smooth soft gradient, clean separation from the main icon.
+Brand feeling: private, thoughtful, safe, personal, emotionally warm, premium but approachable.
+Make the lock detail subtle and elegant, integrated into the diary cover, so the icon feels personal and safe rather than formal or enterprise-like.
+Do not include text, letters, logos, shields, corporate security graphics, phone frames, extra objects, or busy decoration.
+Output: a polished standalone mobile app icon concept for a private journaling app, centered, minimal, warm, secure, memorable, and suitable for iOS and Android.
