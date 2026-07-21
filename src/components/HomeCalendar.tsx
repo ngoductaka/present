@@ -283,18 +283,9 @@ export const HomeCalendar = ({
     (dateString: string) => {
       setSelectedDate(dateString);
       setVisibleMonthKey(dateString.slice(0, 7));
-
-      if (
-        moodByDate[dateString] ||
-        emotionByDate[dateString] ||
-        (diaryImagesByDate[dateString] ?? []).length > 0
-      ) {
-        return;
-      }
-
       onDatePress?.(dateString);
     },
-    [diaryImagesByDate, emotionByDate, moodByDate, onDatePress],
+    [onDatePress],
   );
 
   const handleDetailPress = React.useCallback(() => {
